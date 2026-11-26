@@ -3,56 +3,47 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SHOP LIÊN QUÂN</title>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#101014;color:white;font-family:Arial,sans-serif}
 header{background:#1b1b22;padding:20px;text-align:center;border-bottom:2px solid #e53935}
 header h1{color:#ff4545;margin:0}
-nav{text-align:center;padding:15px}
-nav a{color:white;text-decoration:none;margin:10px}
+nav{padding:15px;text-align:center}
+nav a{color:white;text-decoration:none;margin:8px}
 .banner{padding:35px 15px;text-align:center;background:linear-gradient(120deg,#380b0b,#17171d)}
-.banner h2{font-size:28px;color:#ff5252}
-.banner p{color:#ddd}
-button{background:#e53935;color:white;border:0;padding:12px 20px;border-radius:7px;font-weight:bold;cursor:pointer}
+.banner h2{color:#ff5252}
 .container{padding:20px;max-width:1000px;margin:auto}
-.container h2{text-align:center;color:#ff5252}
+h2{color:#ff5252;text-align:center}
 .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
-.card{background:#202027;border:1px solid #38383f;border-radius:12px;overflow:hidden;padding-bottom:15px}
-.card img{width:100%;height:150px;object-fit:cover}
-.card h3,.card p{padding:0 14px}
+.card,.panel{background:#202027;border:1px solid #38383f;border-radius:12px;padding:16px;margin-bottom:15px}
+.card img{width:100%;height:150px;object-fit:cover;border-radius:8px}
 .price{color:#ff5252;font-size:20px;font-weight:bold}
-.card button{margin-left:14px}
+button{background:#e53935;color:white;border:0;padding:12px 18px;border-radius:7px;font-weight:bold;cursor:pointer;margin:4px}
+button:disabled{opacity:.5;cursor:not-allowed}
+input,select{width:100%;padding:12px;margin:7px 0;border-radius:6px;border:1px solid #555;background:#15151b;color:white}
+.small{color:#aaa;font-size:13px}
+.green{color:#65df8c}
+.yellow{color:#ffd166}
+.red{color:#ff7777}
+.hidden{display:none!important}
+#adminLoginBtn{position:fixed;top:10px;right:10px;z-index:10;background:#e5a900;color:#111}
+#adminLoginBox{display:none;position:fixed;z-index:20;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:380px;background:#202027;padding:22px;border-radius:12px;box-shadow:0 0 0 100vmax #000b}
+#qrImage{display:block;width:100%;max-width:300px;margin:15px auto;background:white;border-radius:8px}
+.money{font-size:26px;color:#65df8c;font-weight:bold;text-align:center}
+.item{padding:12px 0;border-bottom:1px solid #444;overflow-wrap:anywhere}
 footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:30px}
-
-#adminLoginBtn{
-position:fixed;top:12px;right:12px;z-index:9999;
-background:#e5a900;color:#111;padding:11px 15px;
-border-radius:8px;font-weight:bold
-}
-#adminLoginBox{
-display:none;position:fixed;z-index:10000;
-top:50%;left:50%;transform:translate(-50%,-50%);
-width:85%;max-width:340px;padding:20px;
-background:white;color:#111;border-radius:12px;
-box-shadow:0 0 0 100vmax #0009
-}
-#adminLoginBox input{
-width:100%;padding:12px;margin:8px 0
-}
-#adminMessage{overflow-wrap:anywhere}
+a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;padding:12px 18px;border-radius:7px;font-weight:bold}
 </style>
 </head>
-
 <body>
 
 <button id="adminLoginBtn">ĐĂNG NHẬP ADMIN</button>
 
 <div id="adminLoginBox">
 <h3>ĐĂNG NHẬP ADMIN</h3>
-<input id="adminEmail" type="email" placeholder="Email ADMIN">
+<input id="adminEmail" type="email" placeholder="Email Admin">
 <input id="adminPassword" type="password" placeholder="Mật khẩu">
 <button id="loginSubmit">Đăng nhập</button>
 <button id="loginClose">Đóng</button>
@@ -67,199 +58,441 @@ width:100%;padding:12px;margin:8px 0
 <nav>
 <a href="#">Trang chủ</a>
 <a href="#accounts">Danh sách acc</a>
+<a href="#customerBox">Tài khoản của tôi</a>
 <a href="#contact">Liên hệ</a>
 </nav>
 
 <section class="banner">
 <h2>THẾ GIỚI TÀI KHOẢN LIÊN QUÂN</h2>
 <p>Tìm kiếm tài khoản phù hợp với bạn</p>
-<button onclick="document.getElementById('accounts').scrollIntoView()">
-Xem tài khoản
-</button>
+<button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
 </section>
 
 <div class="container" id="accounts">
 <h2>TÀI KHOẢN MỚI NHẤT</h2>
-<div class="products">
-
+<div class="products" id="products">
 <div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+01" alt="Acc 01">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+01">
 <h3>Acc Liên Quân #001</h3>
 <p>Trang phục đẹp - Nhiều tướng</p>
 <p class="price">200.000đ</p>
-<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+<button onclick="needLogin()">Mua tài khoản</button>
 </div>
-
 <div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02" alt="Acc 02">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02">
 <h3>Acc Liên Quân #002</h3>
 <p>Nhiều trang phục - Rank cao</p>
 <p class="price">350.000đ</p>
-<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+<button onclick="needLogin()">Mua tài khoản</button>
 </div>
-
 <div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03" alt="Acc 03">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03">
 <h3>Acc Liên Quân #003</h3>
 <p>Nhiều tướng - Giá tốt</p>
 <p class="price">500.000đ</p>
-<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+<button onclick="needLogin()">Mua tài khoản</button>
+</div>
+</div>
 </div>
 
+<div class="container" id="customerBox">
+<h2>TÀI KHOẢN KHÁCH HÀNG</h2>
+<div class="panel" id="customerForms">
+<input id="customerEmail" type="email" placeholder="Email">
+<input id="customerPhone" type="tel" placeholder="Số điện thoại (khi đăng ký)">
+<input id="customerPassword" type="password" placeholder="Mật khẩu">
+<button onclick="customerRegister()">ĐĂNG KÝ</button>
+<button onclick="customerLogin()">ĐĂNG NHẬP</button>
+<p class="small">Đăng nhập bằng email và mật khẩu. Không cần SMS OTP.</p>
 </div>
+
+<div id="customerInfo" class="hidden">
+<div class="panel">
+<h3>Xin chào!</h3>
+<p id="customerEmailText"></p>
+<p id="customerPhoneText"></p>
+<p>Số dư ví của bạn:</p>
+<div class="money" id="walletBalance">0đ</div>
+<button onclick="loadWallet()">Làm mới số dư</button>
+<button onclick="customerLogout()">ĐĂNG XUẤT</button>
+</div>
+
+<div class="panel">
+<h3>NẠP TIỀN VÀO VÍ</h3>
+<label>Chọn số tiền muốn nạp</label>
+<select id="depositAmount">
+<option value="50000">50.000đ</option>
+<option value="100000">100.000đ</option>
+<option value="200000">200.000đ</option>
+<option value="500000">500.000đ</option>
+<option value="1000000">1.000.000đ</option>
+</select>
+<button onclick="createDeposit()">TẠO MÃ NẠP TIỀN</button>
+<div id="depositArea" class="hidden">
+<p class="yellow">Quét QR để chuyển khoản đúng số tiền và nội dung bên dưới.</p>
+<img id="qrImage" alt="QR Vietcombank">
+<p id="qrAmount" class="money"></p>
+<p><b>Nội dung chuyển khoản:</b></p>
+<p id="qrContent" class="yellow"></p>
+<button onclick="copyTransferContent()">SAO CHÉP NỘI DUNG</button>
+<p class="small">Chỉ chuyển khoản một lần cho mỗi yêu cầu. Tiền sẽ được cộng sau khi Admin kiểm tra giao dịch thực nhận.</p>
+</div>
+</div>
+
+<div class="panel">
+<h3>LỊCH SỬ NẠP TIỀN</h3>
+<div id="depositHistory">Đang tải...</div>
+</div>
+
+<div class="panel">
+<h3>LỊCH SỬ GIAO DỊCH VÍ</h3>
+<div id="walletHistory">Đang tải...</div>
+</div>
+</div>
+<p id="customerStatus"></p>
+</div>
+
+<div class="container hidden" id="adminPanel">
+<h2>QUẢN TRỊ ADMIN</h2>
+<div class="panel">
+<h3>YÊU CẦU NẠP TIỀN</h3>
+<button onclick="loadAdminDeposits()">LÀM MỚI DANH SÁCH</button>
+<div id="adminDeposits">Chưa tải dữ liệu.</div>
+</div>
+<div class="panel">
+<h3>QUẢN LÝ SẢN PHẨM</h3>
+<p>Danh sách sản phẩm đang được lấy từ bảng products trong Supabase. Chức năng thêm, sửa và xóa sản phẩm sẽ được bổ sung ở bước tiếp theo.</p>
+<div id="adminProductInfo"></div>
+</div>
+<button onclick="adminLogout()">ĐĂNG XUẤT ADMIN</button>
 </div>
 
 <footer id="contact">
 <h3>SHOP LIÊN QUÂN</h3>
-<p>Hotline: Chưa cập nhật</p>
+<p>Liên hệ Admin qua Zalo</p>
+<a class="zalo" href="https://zalo.me/0879271194" target="_blank" rel="noopener">CHAT ZALO ADMIN</a>
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
 
-<!-- Tải thư viện Supabase trước khi chạy mã đăng nhập -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-const SUPABASE_URL = "https://fsygieahftwmyzziwtuw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
+const SUPABASE_URL="https://fsygieahftwmyzziwtuw.supabase.co";
+const SUPABASE_KEY="sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
+const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const adminSupabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const BANK_ACCOUNT="1066104233";
+const BANK_NAME="VCB";
+const ACCOUNT_NAME="VAN PHU THOAI";
 
-const loginBox = document.getElementById("adminLoginBox");
-const loginMessage = document.getElementById("adminMessage");
+let currentUser=null;
+let currentDepositContent="";
 
-document.getElementById("adminLoginBtn").addEventListener("click", function(){
-  loginBox.style.display = "block";
-});
-
-document.getElementById("loginClose").addEventListener("click", function(){
-  loginBox.style.display = "none";
-});
-
-document.getElementById("loginSubmit").addEventListener("click", adminLogin);
-
-async function adminLogin(){
-  const email = document.getElementById("adminEmail").value.trim();
-  const password = document.getElementById("adminPassword").value;
-
-  if(!email || !password){
-    loginMessage.textContent = "Vui lòng nhập email và mật khẩu.";
-    return;
-  }
-
-  loginMessage.textContent = "Đang đăng nhập...";
-
-  try{
-    const {data,error} = await adminSupabase.auth.signInWithPassword({
-      email: email,
-      password: password
-    });
-
-    if(error){
-      loginMessage.textContent = "Đăng nhập thất bại: " + error.message;
-      return;
-    }
-
-    loginMessage.textContent = "Đăng nhập thành công!";
-  }catch(error){
-    loginMessage.textContent = "Lỗi kết nối: " + error.message;
-  }
+function money(n){
+ return Number(n||0).toLocaleString("vi-VN")+"đ";
 }
-</script>
-
-<style>
-#customerBox{
-  background:#202027;color:white;padding:20px;
-  max-width:400px;margin:25px auto;border-radius:12px;
+function statusText(s){
+ if(s==="pending")return "Đang chờ xác nhận";
+ if(s==="approved")return "Đã cộng tiền";
+ if(s==="rejected")return "Đã từ chối";
+ return s;
 }
-#customerBox input{
-  width:100%;padding:12px;margin:7px 0;
-  border-radius:6px;border:1px solid #555;
+function needLogin(){
+ document.getElementById("customerBox").scrollIntoView();
+ alert("Vui lòng đăng nhập trước khi mua tài khoản.");
 }
-#customerBox button{margin:5px 3px}
-#customerStatus{overflow-wrap:anywhere}
-</style>
+function showStatus(message){
+ document.getElementById("customerStatus").textContent=message;
+}
 
-<div id="customerBox">
-  <h2>TÀI KHOẢN KHÁCH HÀNG</h2>
-  <div id="customerForms">
-    <input id="customerEmail" type="email" placeholder="Email">
-    <input id="customerPhone" type="tel" placeholder="Số điện thoại">
-    <input id="customerPassword" type="password" placeholder="Mật khẩu">
-    <button onclick="customerRegister()">ĐĂNG KÝ</button>
-    <button onclick="customerLogin()">ĐĂNG NHẬP</button>
-  </div>
-  <div id="customerInfo" style="display:none">
-    <p id="customerPhoneText"></p>
-    <h3>TÀI KHOẢN CỦA TÔI</h3>
-    <p id="customerOrders">Lịch sử mua hàng sẽ hiển thị tại đây.</p>
-    <button onclick="customerLogout()">ĐĂNG XUẤT</button>
-  </div>
-  <p id="customerStatus"></p>
-</div>
-
-<script>
 async function customerRegister(){
-  const email=document.getElementById("customerEmail").value.trim();
-  const phone=document.getElementById("customerPhone").value.trim();
-  const password=document.getElementById("customerPassword").value;
-  const status=document.getElementById("customerStatus");
-
-  if(!email||!phone||!password){
-    status.textContent="Vui lòng nhập đủ thông tin.";
-    return;
-  }
-  if(password.length<6){
-    status.textContent="Mật khẩu phải có ít nhất 6 ký tự.";
-    return;
-  }
-
-  status.textContent="Đang đăng ký...";
-  const {data,error}=await adminSupabase.auth.signUp({
-    email,password,
-    options:{data:{phone}}
-  });
-
-  if(error){
-    status.textContent="Lỗi: "+error.message;
-    return;
-  }
-
-  status.textContent=data.session
-    ?"Đăng ký thành công!"
-    :"Đã tạo tài khoản. Hãy kiểm tra email để xác nhận nếu được yêu cầu.";
+ const email=document.getElementById("customerEmail").value.trim();
+ const phone=document.getElementById("customerPhone").value.trim();
+ const password=document.getElementById("customerPassword").value;
+ if(!email||!phone||!password){showStatus("Vui lòng nhập email, số điện thoại và mật khẩu.");return;}
+ if(password.length<6){showStatus("Mật khẩu phải có ít nhất 6 ký tự.");return;}
+ showStatus("Đang đăng ký...");
+ const {data,error}=await supabaseClient.auth.signUp({
+  email,password,options:{data:{phone}}
+ });
+ if(error){showStatus("Lỗi đăng ký: "+error.message);return;}
+ if(data.session){
+  await showCustomer(data.user);
+  showStatus("Đăng ký thành công!");
+ }else{
+  showStatus("Đã tạo tài khoản. Nếu hệ thống yêu cầu xác nhận email, hãy làm theo hướng dẫn.");
+ }
 }
 
 async function customerLogin(){
-  const email=document.getElementById("customerEmail").value.trim();
-  const password=document.getElementById("customerPassword").value;
-  const status=document.getElementById("customerStatus");
-
-  const {data,error}=await adminSupabase.auth.signInWithPassword({
-    email,password
-  });
-
-  if(error){status.textContent="Đăng nhập lỗi: "+error.message;return;}
-  showCustomer(data.user);
+ const email=document.getElementById("customerEmail").value.trim();
+ const password=document.getElementById("customerPassword").value;
+ if(!email||!password){showStatus("Vui lòng nhập email và mật khẩu.");return;}
+ showStatus("Đang đăng nhập...");
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+ if(error){showStatus("Đăng nhập lỗi: "+error.message);return;}
+ await showCustomer(data.user);
+ showStatus("Đăng nhập thành công!");
 }
 
 async function showCustomer(user){
-  document.getElementById("customerForms").style.display="none";
-  document.getElementById("customerInfo").style.display="block";
-  document.getElementById("customerPhoneText").textContent=
-    "Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
-  document.getElementById("customerStatus").textContent="Đăng nhập thành công!";
+ currentUser=user;
+ document.getElementById("customerForms").classList.add("hidden");
+ document.getElementById("customerInfo").classList.remove("hidden");
+ document.getElementById("customerEmailText").textContent="Email: "+(user.email||"");
+ document.getElementById("customerPhoneText").textContent="Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
+ await loadWallet();
+ await loadDepositHistory();
+ await loadWalletHistory();
 }
 
 async function customerLogout(){
-  await adminSupabase.auth.signOut();
-  document.getElementById("customerForms").style.display="block";
-  document.getElementById("customerInfo").style.display="none";
-  document.getElementById("customerStatus").textContent="Đã đăng xuất.";
+ await supabaseClient.auth.signOut();
+ currentUser=null;
+ document.getElementById("customerForms").classList.remove("hidden");
+ document.getElementById("customerInfo").classList.add("hidden");
+ document.getElementById("adminPanel").classList.add("hidden");
+ showStatus("Đã đăng xuất.");
 }
-</script>
 
+async function loadWallet(){
+ if(!currentUser)return;
+ const {data,error}=await supabaseClient.from("wallets")
+  .select("balance").eq("user_id",currentUser.id).maybeSingle();
+ if(error){document.getElementById("walletBalance").textContent="Chưa tải được";return;}
+ document.getElementById("walletBalance").textContent=money(data?data.balance:0);
+}
+
+async function createDeposit(){
+ if(!currentUser){alert("Vui lòng đăng nhập.");return;}
+ const amount=Number(document.getElementById("depositAmount").value);
+ const suffix=Math.random().toString(36).substring(2,7).toUpperCase();
+ const content="NAPTIEN"+Date.now().toString().slice(-7)+suffix;
+
+ showStatus("Đang tạo yêu cầu nạp tiền...");
+ const {data,error}=await supabaseClient.from("deposit_requests").insert({
+  user_id:currentUser.id,
+  amount:amount,
+  transfer_content:content,
+  status:"pending"
+ }).select().single();
+
+ if(error){
+  showStatus("Không tạo được yêu cầu: "+error.message);
+  return;
+ }
+
+ currentDepositContent=content;
+ const qrURL="https://img.vietqr.io/image/"+BANK_NAME+"-"+BANK_ACCOUNT+"-compact2.png"
+  +"?amount="+amount
+  +"&addInfo="+encodeURIComponent(content)
+  +"&accountName="+encodeURIComponent(ACCOUNT_NAME);
+
+ document.getElementById("qrImage").src=qrURL;
+ document.getElementById("qrAmount").textContent=money(amount);
+ document.getElementById("qrContent").textContent=content;
+ document.getElementById("depositArea").classList.remove("hidden");
+ showStatus("Đã tạo yêu cầu nạp tiền. Hãy chuyển khoản đúng nội dung.");
+ await loadDepositHistory();
+}
+
+async function copyTransferContent(){
+ if(!currentDepositContent)return;
+ try{
+  await navigator.clipboard.writeText(currentDepositContent);
+  alert("Đã sao chép nội dung chuyển khoản.");
+ }catch(e){
+  alert("Bạn hãy ghi lại nội dung: "+currentDepositContent);
+ }
+}
+
+async function loadDepositHistory(){
+ if(!currentUser)return;
+ const box=document.getElementById("depositHistory");
+ const {data,error}=await supabaseClient.from("deposit_requests")
+  .select("id,amount,transfer_content,status,created_at")
+  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
+ if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
+ if(!data.length){box.textContent="Bạn chưa có yêu cầu nạp tiền.";return;}
+ box.innerHTML="";
+ data.forEach(item=>{
+  const div=document.createElement("div");
+  div.className="item";
+  const b=document.createElement("b");
+  b.textContent=money(item.amount);
+  const p=document.createElement("p");
+  p.textContent="Nội dung: "+item.transfer_content;
+  const s=document.createElement("p");
+  s.textContent="Trạng thái: "+statusText(item.status);
+  s.className=item.status==="approved"?"green":"yellow";
+  div.append(b,p,s);
+  box.appendChild(div);
+ });
+}
+
+async function loadWalletHistory(){
+ if(!currentUser)return;
+ const box=document.getElementById("walletHistory");
+ const {data,error}=await supabaseClient.from("wallet_transactions")
+  .select("amount,transaction_type,description,created_at")
+  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
+ if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có giao dịch.";return;}
+ box.innerHTML="";
+ data.forEach(item=>{
+  const div=document.createElement("div");
+  div.className="item";
+  div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Mua hàng -")
+   +money(item.amount)+" | "+(item.description||"");
+  box.appendChild(div);
+ });
+}
+
+document.getElementById("adminLoginBtn").onclick=()=>{
+ document.getElementById("adminLoginBox").style.display="block";
+};
+document.getElementById("loginClose").onclick=()=>{
+ document.getElementById("adminLoginBox").style.display="none";
+};
+document.getElementById("loginSubmit").onclick=adminLogin;
+
+async function adminLogin(){
+ const email=document.getElementById("adminEmail").value.trim();
+ const password=document.getElementById("adminPassword").value;
+ const msg=document.getElementById("adminMessage");
+ if(!email||!password){msg.textContent="Nhập email và mật khẩu.";return;}
+ msg.textContent="Đang đăng nhập...";
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+ if(error){msg.textContent="Đăng nhập lỗi: "+error.message;return;}
+
+ const {data:isAdmin,error:roleError}=await supabaseClient.rpc("is_admin");
+ if(roleError||isAdmin!==true){
+  await supabaseClient.auth.signOut();
+  msg.textContent="Tài khoản này không có quyền Admin.";
+  return;
+ }
+
+ currentUser=data.user;
+ msg.textContent="Đăng nhập Admin thành công!";
+ document.getElementById("adminLoginBox").style.display="none";
+ document.getElementById("adminPanel").classList.remove("hidden");
+ await loadAdminDeposits();
+ await loadAdminProducts();
+}
+
+async function loadAdminDeposits(){
+ const box=document.getElementById("adminDeposits");
+ box.textContent="Đang tải...";
+ const {data,error}=await supabaseClient.from("deposit_requests")
+  .select("id,user_id,amount,transfer_content,status,created_at")
+  .order("created_at",{ascending:false});
+ if(error){box.textContent="Lỗi tải danh sách: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có yêu cầu nạp tiền.";return;}
+ box.innerHTML="";
+ data.forEach(item=>{
+  const div=document.createElement("div");
+  div.className="item";
+  const title=document.createElement("b");
+  title.textContent=money(item.amount)+" - "+statusText(item.status);
+  const user=document.createElement("p");
+  user.textContent="Mã khách: "+item.user_id;
+  const content=document.createElement("p");
+  content.textContent="Nội dung chuyển khoản: "+item.transfer_content;
+  const date=document.createElement("p");
+  date.className="small";
+  date.textContent=new Date(item.created_at).toLocaleString("vi-VN");
+  div.append(title,user,content,date);
+
+  if(item.status==="pending"){
+   const btn=document.createElement("button");
+   btn.textContent="XÁC NHẬN ĐÃ NHẬN TIỀN";
+   btn.onclick=()=>approveDeposit(item.id,btn);
+   div.appendChild(btn);
+  }
+  box.appendChild(div);
+ });
+}
+
+async function approveDeposit(id,button){
+ const ok=confirm("Bạn đã kiểm tra Vietcombank và chắc chắn đã nhận đúng số tiền của yêu cầu này chưa?");
+ if(!ok)return;
+ button.disabled=true;
+ button.textContent="Đang xử lý...";
+ const {data,error}=await supabaseClient.rpc("admin_approve_deposit",{p_deposit_id:id});
+ if(error){
+  alert("Không xác nhận được: "+error.message);
+  button.disabled=false;
+  button.textContent="XÁC NHẬN ĐÃ NHẬN TIỀN";
+  return;
+ }
+ alert(data||"Đã xử lý yêu cầu.");
+ await loadAdminDeposits();
+}
+
+async function loadAdminProducts(){
+ const box=document.getElementById("adminProductInfo");
+ const {data,error}=await supabaseClient.from("products")
+  .select("id,title,price,is_available").order("id");
+ if(error){box.textContent="Không tải được sản phẩm: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có sản phẩm trong bảng products.";return;}
+ box.innerHTML="";
+ data.forEach(p=>{
+  const div=document.createElement("div");
+  div.className="item";
+  div.textContent=p.title+" - "+money(p.price)+" - "+(p.is_available?"Đang bán":"Đã ẩn");
+  box.appendChild(div);
+ });
+}
+
+async function adminLogout(){
+ await supabaseClient.auth.signOut();
+ currentUser=null;
+ document.getElementById("adminPanel").classList.add("hidden");
+ alert("Đã đăng xuất Admin.");
+}
+
+async function loadProducts(){
+ const {data,error}=await supabaseClient.from("products")
+  .select("id,title,description,price,image_url,is_available")
+  .eq("is_available",true).order("id");
+ if(error||!data||!data.length)return;
+ const box=document.getElementById("products");
+ box.innerHTML="";
+ data.forEach(p=>{
+  const card=document.createElement("div");
+  card.className="card";
+  const img=document.createElement("img");
+  img.src=p.image_url||"https://placehold.co/600x350/24242c/ffffff?text=LIEN+QUAN";
+  img.alt=p.title;
+  const title=document.createElement("h3");
+  title.textContent=p.title;
+  const desc=document.createElement("p");
+  desc.textContent=p.description||"";
+  const price=document.createElement("p");
+  price.className="price";
+  price.textContent=money(p.price);
+  const btn=document.createElement("button");
+  btn.textContent="Mua tài khoản";
+  btn.onclick=needLogin;
+  card.append(img,title,desc,price,btn);
+  box.appendChild(card);
+ });
+}
+
+(async function init(){
+ await loadProducts();
+ const {data}=await supabaseClient.auth.getSession();
+ if(data.session){
+  currentUser=data.session.user;
+  const {data:isAdmin}=await supabaseClient.rpc("is_admin");
+  if(isAdmin===true){
+   document.getElementById("adminPanel").classList.remove("hidden");
+   await loadAdminDeposits();
+   await loadAdminProducts();
+  }else{
+   await showCustomer(currentUser);
+  }
+ }
+})();
+</script>
 </body>
 </html>
