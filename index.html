@@ -1,0 +1,77 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Liên Quân</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#101014;color:white;font-family:Arial,sans-serif}
+header{background:#1b1b22;padding:20px;text-align:center;border-bottom:2px solid #e53935}
+header h1{color:#ff4545;margin:0}
+nav{text-align:center;padding:15px}
+nav a{color:white;text-decoration:none;margin:10px}
+.banner{padding:35px 15px;text-align:center;background:linear-gradient(120deg,#380b0b,#17171d)}
+.banner h2{font-size:28px;color:#ff5252}
+.banner p{color:#ddd}
+button{background:#e53935;color:white;border:0;padding:12px 20px;border-radius:7px;font-weight:bold}
+.container{padding:20px;max-width:1000px;margin:auto}
+.container h2{text-align:center;color:#ff5252}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.card{background:#202027;border:1px solid #38383f;border-radius:12px;overflow:hidden;padding-bottom:15px}
+.card img{width:100%;height:150px;object-fit:cover}
+.card h3,.card p{padding:0 14px}
+.price{color:#ff5252;font-size:20px;font-weight:bold}
+.card button{margin-left:14px;cursor:pointer}
+footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:30px}
+</style>
+</head>
+<body>
+<header>
+<h1>SHOP LIÊN QUÂN</h1>
+<p>Uy tín - Chất lượng - Giá tốt</p>
+</header>
+<nav>
+<a href="#">Trang chủ</a>
+<a href="#accounts">Danh sách acc</a>
+<a href="#contact">Liên hệ</a>
+</nav>
+<section class="banner">
+<h2>THẾ GIỚI TÀI KHOẢN LIÊN QUÂN</h2>
+<p>Tìm kiếm tài khoản phù hợp với bạn</p>
+<button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
+</section>
+<div class="container" id="accounts">
+<h2>TÀI KHOẢN MỚI NHẤT</h2>
+<div class="products">
+<div class="card">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+01" alt="Acc 01">
+<h3>Acc Liên Quân #001</h3>
+<p>Trang phục đẹp - Nhiều tướng</p>
+<p class="price">200.000đ</p>
+<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+</div>
+<div class="card">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02" alt="Acc 02">
+<h3>Acc Liên Quân #002</h3>
+<p>Nhiều trang phục - Rank cao</p>
+<p class="price">350.000đ</p>
+<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+</div>
+<div class="card">
+<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03" alt="Acc 03">
+<h3>Acc Liên Quân #003</h3>
+<p>Nhiều tướng - Giá tốt</p>
+<p class="price">500.000đ</p>
+<button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
+</div>
+</div>
+</div>
+<footer id="contact">
+<h3>SHOP LIÊN QUÂN</h3>
+<p>Hotline: Chưa cập nhật</p>
+<p>© 2026 - Website bán tài khoản game</p>
+</footer>
+</body>
+</html>
