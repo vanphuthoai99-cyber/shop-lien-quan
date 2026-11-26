@@ -4,7 +4,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Shop Liên Quân</title>
+<title>SHOP LIÊN QUÂN</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#101014;color:white;font-family:Arial,sans-serif}
@@ -15,7 +16,7 @@ nav a{color:white;text-decoration:none;margin:10px}
 .banner{padding:35px 15px;text-align:center;background:linear-gradient(120deg,#380b0b,#17171d)}
 .banner h2{font-size:28px;color:#ff5252}
 .banner p{color:#ddd}
-button{background:#e53935;color:white;border:0;padding:12px 20px;border-radius:7px;font-weight:bold}
+button{background:#e53935;color:white;border:0;padding:12px 20px;border-radius:7px;font-weight:bold;cursor:pointer}
 .container{padding:20px;max-width:1000px;margin:auto}
 .container h2{text-align:center;color:#ff5252}
 .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
@@ -23,111 +24,64 @@ button{background:#e53935;color:white;border:0;padding:12px 20px;border-radius:7
 .card img{width:100%;height:150px;object-fit:cover}
 .card h3,.card p{padding:0 14px}
 .price{color:#ff5252;font-size:20px;font-weight:bold}
-.card button{margin-left:14px;cursor:pointer}
+.card button{margin-left:14px}
 footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:30px}
+
+#adminLoginBtn{
+position:fixed;top:12px;right:12px;z-index:9999;
+background:#e5a900;color:#111;padding:11px 15px;
+border-radius:8px;font-weight:bold
+}
+#adminLoginBox{
+display:none;position:fixed;z-index:10000;
+top:50%;left:50%;transform:translate(-50%,-50%);
+width:85%;max-width:340px;padding:20px;
+background:white;color:#111;border-radius:12px;
+box-shadow:0 0 0 100vmax #0009
+}
+#adminLoginBox input{
+width:100%;padding:12px;margin:8px 0
+}
+#adminMessage{overflow-wrap:anywhere}
 </style>
 </head>
 
-<style>
-#adminLoginBtn {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  z-index: 9999;
-  background: #e5a900;
-  color: #111;
-  border: 0;
-  padding: 11px 15px;
-  border-radius: 8px;
-  font-weight: bold;
-}
-#adminLoginBox {
-  display: none;
-  position: fixed;
-  z-index: 10000;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  width: 85%;
-  max-width: 340px;
-  padding: 20px;
-  background: white;
-  color: #111;
-  border-radius: 12px;
-  box-shadow: 0 0 0 100vmax #0009;
-}
-#adminLoginBox input {
-  box-sizing: border-box;
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-}
-#adminLoginBox button {
-  padding: 10px;
-  margin-top: 8px;
-}
-</style>
+<body>
 
 <button id="adminLoginBtn">ĐĂNG NHẬP ADMIN</button>
 
 <div id="adminLoginBox">
-  <h3>ĐĂNG NHẬP ADMIN</h3>
-  <input id="adminEmail" type="email" placeholder="Email ADMIN">
-  <input id="adminPassword" type="password" placeholder="Mật khẩu">
-  <button onclick="adminLogin()">Đăng nhập</button>
-  <button onclick="document.getElementById('adminLoginBox').style.display='none'">Đóng</button>
-  <p id="adminMessage"></p>
+<h3>ĐĂNG NHẬP ADMIN</h3>
+<input id="adminEmail" type="email" placeholder="Email ADMIN">
+<input id="adminPassword" type="password" placeholder="Mật khẩu">
+<button id="loginSubmit">Đăng nhập</button>
+<button id="loginClose">Đóng</button>
+<p id="adminMessage"></p>
 </div>
 
-<script>
-const adminSupabase = window.supabase.createClient(
-  "https://fsygieahftwmyzziwtuw.supabase.co",
-  "sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl"
-);
-
-document.getElementById("adminLoginBtn").onclick = function() {
-  document.getElementById("adminLoginBox").style.display = "block";
-};
-
-async function adminLogin() {
-  const email = document.getElementById("adminEmail").value;
-  const password = document.getElementById("adminPassword").value;
-  const message = document.getElementById("adminMessage");
-
-  message.textContent = "Đang đăng nhập...";
-
-  const { data, error } = await adminSupabase.auth.signInWithPassword({
-
-  email: email,
-    password: password
-  });
-
-  if (error) {
-    message.textContent = "Đăng nhập thất bại. Hãy kiểm tra email và mật khẩu.";
-  } else {
-    message.textContent = "Đăng nhập thành công!";
-  }
-}
-</script>
-
-  <body>
 <header>
 <h1>SHOP LIÊN QUÂN</h1>
 <p>Uy tín - Chất lượng - Giá tốt</p>
 </header>
+
 <nav>
 <a href="#">Trang chủ</a>
 <a href="#accounts">Danh sách acc</a>
 <a href="#contact">Liên hệ</a>
 </nav>
+
 <section class="banner">
 <h2>THẾ GIỚI TÀI KHOẢN LIÊN QUÂN</h2>
 <p>Tìm kiếm tài khoản phù hợp với bạn</p>
-<button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
+<button onclick="document.getElementById('accounts').scrollIntoView()">
+Xem tài khoản
+</button>
 </section>
+
 <div class="container" id="accounts">
 <h2>TÀI KHOẢN MỚI NHẤT</h2>
 <div class="products">
+
 <div class="card">
 <img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+01" alt="Acc 01">
 <h3>Acc Liên Quân #001</h3>
@@ -135,6 +89,7 @@ async function adminLogin() {
 <p class="price">200.000đ</p>
 <button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
 </div>
+
 <div class="card">
 <img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02" alt="Acc 02">
 <h3>Acc Liên Quân #002</h3>
@@ -142,6 +97,7 @@ async function adminLogin() {
 <p class="price">350.000đ</p>
 <button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
 </div>
+
 <div class="card">
 <img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03" alt="Acc 03">
 <h3>Acc Liên Quân #003</h3>
@@ -149,27 +105,68 @@ async function adminLogin() {
 <p class="price">500.000đ</p>
 <button onclick="alert('Vui lòng liên hệ shop để mua tài khoản')">Xem chi tiết</button>
 </div>
+
 </div>
 </div>
+
 <footer id="contact">
 <h3>SHOP LIÊN QUÂN</h3>
 <p>Hotline: Chưa cập nhật</p>
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
 
+<!-- Tải thư viện Supabase trước khi chạy mã đăng nhập -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 const SUPABASE_URL = "https://fsygieahftwmyzziwtuw.supabase.co";
 const SUPABASE_KEY = "sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
 
-const supabaseClient = window.supabase.createClient(
+const adminSupabase = window.supabase.createClient(
   SUPABASE_URL,
   SUPABASE_KEY
 );
 
-console.log("Đã kết nối Supabase!");
+const loginBox = document.getElementById("adminLoginBox");
+const loginMessage = document.getElementById("adminMessage");
 
+document.getElementById("adminLoginBtn").addEventListener("click", function(){
+  loginBox.style.display = "block";
+});
+
+document.getElementById("loginClose").addEventListener("click", function(){
+  loginBox.style.display = "none";
+});
+
+document.getElementById("loginSubmit").addEventListener("click", adminLogin);
+
+async function adminLogin(){
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminPassword").value;
+
+  if(!email || !password){
+    loginMessage.textContent = "Vui lòng nhập email và mật khẩu.";
+    return;
+  }
+
+  loginMessage.textContent = "Đang đăng nhập...";
+
+  try{
+    const {data,error} = await adminSupabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+    if(error){
+      loginMessage.textContent = "Đăng nhập thất bại: " + error.message;
+      return;
+    }
+
+    loginMessage.textContent = "Đăng nhập thành công!";
+  }catch(error){
+    loginMessage.textContent = "Lỗi kết nối: " + error.message;
+  }
+}
 </script>
 
 </body>
