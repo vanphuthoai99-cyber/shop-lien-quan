@@ -73,5 +73,20 @@ footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:3
 <p>Hotline: Chưa cập nhật</p>
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const SUPABASE_URL = "https://fsygieahftwmyzziwtuw.supabase.co";
+const SUPABASE_KEY = "sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
+
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+console.log("Đã kết nối Supabase!");
+</script>
+
 </body>
 </html>
