@@ -169,5 +169,97 @@ async function adminLogin(){
 }
 </script>
 
+<style>
+#customerBox{
+  background:#202027;color:white;padding:20px;
+  max-width:400px;margin:25px auto;border-radius:12px;
+}
+#customerBox input{
+  width:100%;padding:12px;margin:7px 0;
+  border-radius:6px;border:1px solid #555;
+}
+#customerBox button{margin:5px 3px}
+#customerStatus{overflow-wrap:anywhere}
+</style>
+
+<div id="customerBox">
+  <h2>TÀI KHOẢN KHÁCH HÀNG</h2>
+  <div id="customerForms">
+    <input id="customerEmail" type="email" placeholder="Email">
+    <input id="customerPhone" type="tel" placeholder="Số điện thoại">
+    <input id="customerPassword" type="password" placeholder="Mật khẩu">
+    <button onclick="customerRegister()">ĐĂNG KÝ</button>
+    <button onclick="customerLogin()">ĐĂNG NHẬP</button>
+  </div>
+  <div id="customerInfo" style="display:none">
+    <p id="customerPhoneText"></p>
+    <h3>TÀI KHOẢN CỦA TÔI</h3>
+    <p id="customerOrders">Lịch sử mua hàng sẽ hiển thị tại đây.</p>
+    <button onclick="customerLogout()">ĐĂNG XUẤT</button>
+  </div>
+  <p id="customerStatus"></p>
+</div>
+
+<script>
+async function customerRegister(){
+  const email=document.getElementById("customerEmail").value.trim();
+  const phone=document.getElementById("customerPhone").value.trim();
+  const password=document.getElementById("customerPassword").value;
+  const status=document.getElementById("customerStatus");
+
+  if(!email||!phone||!password){
+    status.textContent="Vui lòng nhập đủ thông tin.";
+    return;
+  }
+  if(password.length<6){
+    status.textContent="Mật khẩu phải có ít nhất 6 ký tự.";
+    return;
+  }
+
+  status.textContent="Đang đăng ký...";
+  const {data,error}=await adminSupabase.auth.signUp({
+    email,password,
+    options:{data:{phone}}
+  });
+
+  if(error){
+    status.textContent="Lỗi: "+error.message;
+    return;
+  }
+
+  status.textContent=data.session
+    ?"Đăng ký thành công!"
+    :"Đã tạo tài khoản. Hãy kiểm tra email để xác nhận nếu được yêu cầu.";
+}
+
+async function customerLogin(){
+  const email=document.getElementById("customerEmail").value.trim();
+  const password=document.getElementById("customerPassword").value;
+  const status=document.getElementById("customerStatus");
+
+  const {data,error}=await adminSupabase.auth.signInWithPassword({
+    email,password
+  });
+
+  if(error){status.textContent="Đăng nhập lỗi: "+error.message;return;}
+  showCustomer(data.user);
+}
+
+async function showCustomer(user){
+  document.getElementById("customerForms").style.display="none";
+  document.getElementById("customerInfo").style.display="block";
+  document.getElementById("customerPhoneText").textContent=
+    "Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
+  document.getElementById("customerStatus").textContent="Đăng nhập thành công!";
+}
+
+async function customerLogout(){
+  await adminSupabase.auth.signOut();
+  document.getElementById("customerForms").style.display="block";
+  document.getElementById("customerInfo").style.display="none";
+  document.getElementById("customerStatus").textContent="Đã đăng xuất.";
+}
+</script>
+
 </body>
 </html>
