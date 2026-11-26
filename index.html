@@ -1,502 +1,158 @@
+-- Them cot luu thong tin tai khoan da giao trong don hang
+ALTER TABLE public.orders
+  ADD COLUMN IF NOT EXISTS account_login text,
+  ADD COLUMN IF NOT EXISTS account_password text;
 
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SHOP LIÊN QUÂN</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#101014;color:white;font-family:Arial,sans-serif}
-header{background:#1b1b22;padding:20px;text-align:center;border-bottom:2px solid #e53935}
-header h1{color:#ff4545;margin:0}
-nav{padding:15px;text-align:center}
-nav a{color:white;text-decoration:none;margin:8px}
-.banner{padding:35px 15px;text-align:center;background:linear-gradient(120deg,#380b0b,#17171d)}
-.banner h2{color:#ff5252}
-.container{padding:20px;max-width:1000px;margin:auto}
-h2{color:#ff5252;text-align:center}
-.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
-.card,.panel{background:#202027;border:1px solid #38383f;border-radius:12px;padding:16px;margin-bottom:15px}
-.card img{width:100%;height:150px;object-fit:cover;border-radius:8px}
-.price{color:#ff5252;font-size:20px;font-weight:bold}
-button{background:#e53935;color:white;border:0;padding:12px 18px;border-radius:7px;font-weight:bold;cursor:pointer;margin:4px}
-button:disabled{opacity:.5;cursor:not-allowed}
-input,select{width:100%;padding:12px;margin:7px 0;border-radius:6px;border:1px solid #555;background:#15151b;color:white}
-.small{color:#aaa;font-size:13px}
-.green{color:#65df8c}
-.yellow{color:#ffd166}
-.red{color:#ff7777}
-.hidden{display:none!important}
-#adminLoginBtn{position:fixed;top:10px;right:10px;z-index:10;background:#e5a900;color:#111}
-#adminLoginBox{display:none;position:fixed;z-index:20;top:50%;left:50%;transform:translate(-50%,-50%);width:90%;max-width:380px;background:#202027;padding:22px;border-radius:12px;box-shadow:0 0 0 100vmax #000b}
-#qrImage{display:block;width:100%;max-width:300px;margin:15px auto;background:white;border-radius:8px}
-.money{font-size:26px;color:#65df8c;font-weight:bold;text-align:center}
-.item{padding:12px 0;border-bottom:1px solid #444;overflow-wrap:anywhere}
-footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:30px}
-a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;padding:12px 18px;border-radius:7px;font-weight:bold}
-</style>
-</head>
-<body>
+-- Khach chi xem duoc don hang cua chinh minh
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
-<button id="adminLoginBtn">ĐĂNG NHẬP ADMIN</button>
+DROP POLICY IF EXISTS "Customer read own orders" ON public.orders;
 
-<div id="adminLoginBox">
-<h3>ĐĂNG NHẬP ADMIN</h3>
-<input id="adminEmail" type="email" placeholder="Email Admin">
-<input id="adminPassword" type="password" placeholder="Mật khẩu">
-<button id="loginSubmit">Đăng nhập</button>
-<button id="loginClose">Đóng</button>
-<p id="adminMessage"></p>
-</div>
+CREATE POLICY "Customer read own orders"
+ON public.orders
+FOR SELECT
+TO authenticated
+USING (user_id = auth.uid());
 
-<header>
-<h1>SHOP LIÊN QUÂN</h1>
-<p>Uy tín - Chất lượng - Giá tốt</p>
-</header>
 
-<nav>
-<a href="#">Trang chủ</a>
-<a href="#accounts">Danh sách acc</a>
-<a href="#customerBox">Tài khoản của tôi</a>
-<a href="#contact">Liên hệ</a>
-</nav>
+-- Ham mua tai khoan: tru tien, tao don, giao tai khoan
+CREATE OR REPLACE FUNCTION public.purchase_product(p_product_id bigint)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id uuid := auth.uid();
+  v_price bigint;
+  v_title text;
+  v_balance bigint;
+  v_login text;
+  v_password text;
+  v_order_id text;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Vui long dang nhap truoc khi mua.';
+  END IF;
 
-<section class="banner">
-<h2>THẾ GIỚI TÀI KHOẢN LIÊN QUÂN</h2>
-<p>Tìm kiếm tài khoản phù hợp với bạn</p>
-<button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
-</section>
+  SELECT title, price::bigint
+  INTO v_title, v_price
+  FROM public.products
+  WHERE id = p_product_id
+    AND is_available = true
+  FOR UPDATE;
 
-<div class="container" id="accounts">
-<h2>TÀI KHOẢN MỚI NHẤT</h2>
-<div class="products" id="products">
-<div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+01">
-<h3>Acc Liên Quân #001</h3>
-<p>Trang phục đẹp - Nhiều tướng</p>
-<p class="price">200.000đ</p>
-<button onclick="needLogin()">Mua tài khoản</button>
-</div>
-<div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02">
-<h3>Acc Liên Quân #002</h3>
-<p>Nhiều trang phục - Rank cao</p>
-<p class="price">350.000đ</p>
-<button onclick="needLogin()">Mua tài khoản</button>
-</div>
-<div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03">
-<h3>Acc Liên Quân #003</h3>
-<p>Nhiều tướng - Giá tốt</p>
-<p class="price">500.000đ</p>
-<button onclick="needLogin()">Mua tài khoản</button>
-</div>
-</div>
-</div>
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Tai khoan khong con hang.';
+  END IF;
 
-<div class="container" id="customerBox">
-<h2>TÀI KHOẢN KHÁCH HÀNG</h2>
-<div class="panel" id="customerForms">
-<input id="customerEmail" type="email" placeholder="Email">
-<input id="customerPhone" type="tel" placeholder="Số điện thoại (khi đăng ký)">
-<input id="customerPassword" type="password" placeholder="Mật khẩu">
-<button onclick="customerRegister()">ĐĂNG KÝ</button>
-<button onclick="customerLogin()">ĐĂNG NHẬP</button>
-<p class="small">Đăng nhập bằng email và mật khẩu. Không cần SMS OTP.</p>
-</div>
+  SELECT balance
+  INTO v_balance
+  FROM public.wallets
+  WHERE user_id = v_user_id
+  FOR UPDATE;
 
-<div id="customerInfo" class="hidden">
-<div class="panel">
-<h3>Xin chào!</h3>
-<p id="customerEmailText"></p>
-<p id="customerPhoneText"></p>
-<p>Số dư ví của bạn:</p>
-<div class="money" id="walletBalance">0đ</div>
-<button onclick="loadWallet()">Làm mới số dư</button>
-<button onclick="customerLogout()">ĐĂNG XUẤT</button>
-</div>
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Khong tim thay vi tien.';
+  END IF;
 
-<div class="panel">
-<h3>NẠP TIỀN VÀO VÍ</h3>
-<label>Chọn số tiền muốn nạp</label>
-<select id="depositAmount">
-<option value="50000">10.000đ</option>
-<option value="100000">20.000đ</option>
-<option value="200000">50.000đ</option>
-<option value="500000">100.000đ</option>
-<option value="1000000">1.000.000đ</option>
-</select>
-<button onclick="createDeposit()">TẠO MÃ NẠP TIỀN</button>
-<div id="depositArea" class="hidden">
-<p class="yellow">Quét QR để chuyển khoản đúng số tiền và nội dung bên dưới.</p>
-<img id="qrImage" alt="QR Vietcombank">
-<p id="qrAmount" class="money"></p>
-<p><b>Nội dung chuyển khoản:</b></p>
-<p id="qrContent" class="yellow"></p>
-<button onclick="copyTransferContent()">SAO CHÉP NỘI DUNG</button>
-<p class="small">Chỉ chuyển khoản một lần cho mỗi yêu cầu. Tiền sẽ được cộng sau khi Admin kiểm tra giao dịch thực nhận.</p>
-</div>
-</div>
+  IF v_balance < v_price THEN
+    RAISE EXCEPTION 'So du vi khong du. Hay nap them tien.';
+  END IF;
 
-<div class="panel">
-<h3>LỊCH SỬ NẠP TIỀN</h3>
-<div id="depositHistory">Đang tải...</div>
-</div>
+  SELECT account_login, account_password
+  INTO v_login, v_password
+  FROM public.product_credentials
+  WHERE product_id = p_product_id
+  FOR UPDATE;
 
-<div class="panel">
-<h3>LỊCH SỬ GIAO DỊCH VÍ</h3>
-<div id="walletHistory">Đang tải...</div>
-</div>
-</div>
-<p id="customerStatus"></p>
-</div>
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'San pham chua co thong tin tai khoan.';
+  END IF;
 
-<div class="container hidden" id="adminPanel">
-<h2>QUẢN TRỊ ADMIN</h2>
-<div class="panel">
-<h3>YÊU CẦU NẠP TIỀN</h3>
-<button onclick="loadAdminDeposits()">LÀM MỚI DANH SÁCH</button>
-<div id="adminDeposits">Chưa tải dữ liệu.</div>
-</div>
-<div class="panel">
-<h3>QUẢN LÝ SẢN PHẨM</h3>
-<p>Danh sách sản phẩm đang được lấy từ bảng products trong Supabase. Chức năng thêm, sửa và xóa sản phẩm sẽ được bổ sung ở bước tiếp theo.</p>
-<div id="adminProductInfo"></div>
-</div>
-<button onclick="adminLogout()">ĐĂNG XUẤT ADMIN</button>
-</div>
+  UPDATE public.wallets
+  SET balance = balance - v_price
+  WHERE user_id = v_user_id;
 
-<footer id="contact">
-<h3>SHOP LIÊN QUÂN</h3>
-<p>Liên hệ Admin qua Zalo</p>
-<a class="zalo" href="https://zalo.me/0879271194" target="_blank" rel="noopener">CHAT ZALO ADMIN</a>
-<p>© 2026 - Website bán tài khoản game</p>
-</footer>
+  UPDATE public.products
+  SET is_available = false
+  WHERE id = p_product_id;
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-const SUPABASE_URL="https://fsygieahftwmyzziwtuw.supabase.co";
-const SUPABASE_KEY="sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
-const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  INSERT INTO public.orders
+    (user_id, product_id, amount, status, account_login, account_password)
+  VALUES
+    (v_user_id, p_product_id, v_price, 'completed', v_login, v_password)
+  RETURNING id::text INTO v_order_id;
 
-const BANK_ACCOUNT="1066104233";
-const BANK_NAME="VCB";
-const ACCOUNT_NAME="VAN PHU THOAI";
+  INSERT INTO public.wallet_transactions
+    (user_id, amount, transaction_type, description)
+  VALUES
+    (v_user_id, v_price, 'purchase',
+     'Mua ' || COALESCE(v_title, 'tai khoan') || ' - don #' || v_order_id);
 
-let currentUser=null;
-let currentDepositContent="";
+  RETURN jsonb_build_object(
+    'success', true,
+    'order_id', v_order_id,
+    'title', v_title,
+    'amount', v_price,
+    'account_login', v_login,
+    'account_password', v_password
+  );
+END;
+$$;
 
-function money(n){
- return Number(n||0).toLocaleString("vi-VN")+"đ";
-}
-function statusText(s){
- if(s==="pending")return "Đang chờ xác nhận";
- if(s==="approved")return "Đã cộng tiền";
- if(s==="rejected")return "Đã từ chối";
- return s;
-}
-function needLogin(){
- if(currentUser){
-   alert("Bạn đã đăng nhập. Chức năng mua tài khoản đang được hoàn thiện.");
-   return;
- }
- document.getElementById("customerBox").scrollIntoView();
- alert("Vui lòng đăng nhập trước khi mua tài khoản.");
-}
-function showStatus(message){
- document.getElementById("customerStatus").textContent=message;
-}
+REVOKE ALL ON FUNCTION public.purchase_product(bigint) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.purchase_product(bigint) TO authenticated;
 
-async function customerRegister(){
- const email=document.getElementById("customerEmail").value.trim();
- const phone=document.getElementById("customerPhone").value.trim();
- const password=document.getElementById("customerPassword").value;
- if(!email||!phone||!password){showStatus("Vui lòng nhập email, số điện thoại và mật khẩu.");return;}
- if(password.length<6){showStatus("Mật khẩu phải có ít nhất 6 ký tự.");return;}
- showStatus("Đang đăng ký...");
- const {data,error}=await supabaseClient.auth.signUp({
-  email,password,options:{data:{phone}}
- });
- if(error){showStatus("Lỗi đăng ký: "+error.message);return;}
- if(data.session){
-  await showCustomer(data.user);
-  showStatus("Đăng ký thành công!");
- }else{
-  showStatus("Đã tạo tài khoản. Nếu hệ thống yêu cầu xác nhận email, hãy làm theo hướng dẫn.");
- }
-}
 
-async function customerLogin(){
- const email=document.getElementById("customerEmail").value.trim();
- const password=document.getElementById("customerPassword").value;
- if(!email||!password){showStatus("Vui lòng nhập email và mật khẩu.");return;}
- showStatus("Đang đăng nhập...");
- const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
- if(error){showStatus("Đăng nhập lỗi: "+error.message);return;}
- await showCustomer(data.user);
- showStatus("Đăng nhập thành công!");
-}
+-- Ham Admin them san pham va thong tin tai khoan game
+CREATE OR REPLACE FUNCTION public.admin_add_product(
+  p_title text,
+  p_description text,
+  p_price bigint,
+  p_image_url text,
+  p_account_login text,
+  p_account_password text
+)
+RETURNS bigint
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_product_id bigint;
+BEGIN
+  IF auth.uid() IS NULL OR NOT public.is_admin() THEN
+    RAISE EXCEPTION 'Ban khong co quyen Admin.';
+  END IF;
 
-async function showCustomer(user){
- currentUser=user;
- document.getElementById("customerForms").classList.add("hidden");
- document.getElementById("customerInfo").classList.remove("hidden");
- document.getElementById("customerEmailText").textContent="Email: "+(user.email||"");
- document.getElementById("customerPhoneText").textContent="Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
- await loadWallet();
- await loadDepositHistory();
- await loadWalletHistory();
-}
+  IF COALESCE(trim(p_title), '') = ''
+     OR p_price < 1000
+     OR COALESCE(trim(p_account_login), '') = ''
+     OR COALESCE(p_account_password, '') = '' THEN
+    RAISE EXCEPTION 'Thong tin san pham khong hop le.';
+  END IF;
 
-async function customerLogout(){
- await supabaseClient.auth.signOut();
- currentUser=null;
- document.getElementById("customerForms").classList.remove("hidden");
- document.getElementById("customerInfo").classList.add("hidden");
- document.getElementById("adminPanel").classList.add("hidden");
- showStatus("Đã đăng xuất.");
-}
+  INSERT INTO public.products
+    (title, description, price, image_url, is_available)
+  VALUES
+    (trim(p_title), p_description, p_price,
+     NULLIF(trim(p_image_url), ''), true)
+  RETURNING id INTO v_product_id;
 
-async function loadWallet(){
- if(!currentUser)return;
- const {data,error}=await supabaseClient.from("wallets")
-  .select("balance").eq("user_id",currentUser.id).maybeSingle();
- if(error){document.getElementById("walletBalance").textContent="Chưa tải được";return;}
- document.getElementById("walletBalance").textContent=money(data?data.balance:0);
-}
+  INSERT INTO public.product_credentials
+    (product_id, account_login, account_password)
+  VALUES
+    (v_product_id, p_account_login, p_account_password);
 
-async function createDeposit(){
- if(!currentUser){alert("Vui lòng đăng nhập.");return;}
- const amount=Number(document.getElementById("depositAmount").value);
- const suffix=Math.random().toString(36).substring(2,7).toUpperCase();
- const content="NAPTIEN"+Date.now().toString().slice(-7)+suffix;
+  RETURN v_product_id;
+END;
+$$;
 
- showStatus("Đang tạo yêu cầu nạp tiền...");
- const {data,error}=await supabaseClient.from("deposit_requests").insert({
-  user_id:currentUser.id,
-  amount:amount,
-  transfer_content:content,
-  status:"pending"
- }).select().single();
+REVOKE ALL ON FUNCTION public.admin_add_product(
+  text, text, bigint, text, text, text
+) FROM PUBLIC;
 
- if(error){
-  showStatus("Không tạo được yêu cầu: "+error.message);
-  return;
- }
-
- currentDepositContent=content;
- const qrURL="https://img.vietqr.io/image/"+BANK_NAME+"-"+BANK_ACCOUNT+"-compact2.png"
-  +"?amount="+amount
-  +"&addInfo="+encodeURIComponent(content)
-  +"&accountName="+encodeURIComponent(ACCOUNT_NAME);
-
- document.getElementById("qrImage").src=qrURL;
- document.getElementById("qrAmount").textContent=money(amount);
- document.getElementById("qrContent").textContent=content;
- document.getElementById("depositArea").classList.remove("hidden");
- showStatus("Đã tạo yêu cầu nạp tiền. Hãy chuyển khoản đúng nội dung.");
- await loadDepositHistory();
-}
-
-async function copyTransferContent(){
- if(!currentDepositContent)return;
- try{
-  await navigator.clipboard.writeText(currentDepositContent);
-  alert("Đã sao chép nội dung chuyển khoản.");
- }catch(e){
-  alert("Bạn hãy ghi lại nội dung: "+currentDepositContent);
- }
-}
-
-async function loadDepositHistory(){
- if(!currentUser)return;
- const box=document.getElementById("depositHistory");
- const {data,error}=await supabaseClient.from("deposit_requests")
-  .select("id,amount,transfer_content,status,created_at")
-  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
- if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
- if(!data.length){box.textContent="Bạn chưa có yêu cầu nạp tiền.";return;}
- box.innerHTML="";
- data.forEach(item=>{
-  const div=document.createElement("div");
-  div.className="item";
-  const b=document.createElement("b");
-  b.textContent=money(item.amount);
-  const p=document.createElement("p");
-  p.textContent="Nội dung: "+item.transfer_content;
-  const s=document.createElement("p");
-  s.textContent="Trạng thái: "+statusText(item.status);
-  s.className=item.status==="approved"?"green":"yellow";
-  div.append(b,p,s);
-  box.appendChild(div);
- });
-}
-
-async function loadWalletHistory(){
- if(!currentUser)return;
- const box=document.getElementById("walletHistory");
- const {data,error}=await supabaseClient.from("wallet_transactions")
-  .select("amount,transaction_type,description,created_at")
-  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
- if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
- if(!data.length){box.textContent="Chưa có giao dịch.";return;}
- box.innerHTML="";
- data.forEach(item=>{
-  const div=document.createElement("div");
-  div.className="item";
-  div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Mua hàng -")
-   +money(item.amount)+" | "+(item.description||"");
-  box.appendChild(div);
- });
-}
-
-document.getElementById("adminLoginBtn").onclick=()=>{
- document.getElementById("adminLoginBox").style.display="block";
-};
-document.getElementById("loginClose").onclick=()=>{
- document.getElementById("adminLoginBox").style.display="none";
-};
-document.getElementById("loginSubmit").onclick=adminLogin;
-
-async function adminLogin(){
- const email=document.getElementById("adminEmail").value.trim();
- const password=document.getElementById("adminPassword").value;
- const msg=document.getElementById("adminMessage");
- if(!email||!password){msg.textContent="Nhập email và mật khẩu.";return;}
- msg.textContent="Đang đăng nhập...";
- const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
- if(error){msg.textContent="Đăng nhập lỗi: "+error.message;return;}
-
- const {data:isAdmin,error:roleError}=await supabaseClient.rpc("is_admin");
- if(roleError||isAdmin!==true){
-  await supabaseClient.auth.signOut();
-  msg.textContent="Tài khoản này không có quyền Admin.";
-  return;
- }
-
- currentUser=data.user;
- msg.textContent="Đăng nhập Admin thành công!";
- document.getElementById("adminLoginBox").style.display="none";
- document.getElementById("adminPanel").classList.remove("hidden");
- await loadAdminDeposits();
- await loadAdminProducts();
-}
-
-async function loadAdminDeposits(){
- const box=document.getElementById("adminDeposits");
- box.textContent="Đang tải...";
- const {data,error}=await supabaseClient.from("deposit_requests")
-  .select("id,user_id,amount,transfer_content,status,created_at")
-  .order("created_at",{ascending:false});
- if(error){box.textContent="Lỗi tải danh sách: "+error.message;return;}
- if(!data.length){box.textContent="Chưa có yêu cầu nạp tiền.";return;}
- box.innerHTML="";
- data.forEach(item=>{
-  const div=document.createElement("div");
-  div.className="item";
-  const title=document.createElement("b");
-  title.textContent=money(item.amount)+" - "+statusText(item.status);
-  const user=document.createElement("p");
-  user.textContent="Mã khách: "+item.user_id;
-  const content=document.createElement("p");
-  content.textContent="Nội dung chuyển khoản: "+item.transfer_content;
-  const date=document.createElement("p");
-  date.className="small";
-  date.textContent=new Date(item.created_at).toLocaleString("vi-VN");
-  div.append(title,user,content,date);
-
-  if(item.status==="pending"){
-   const btn=document.createElement("button");
-   btn.textContent="XÁC NHẬN ĐÃ NHẬN TIỀN";
-   btn.onclick=()=>approveDeposit(item.id,btn);
-   div.appendChild(btn);
-  }
-  box.appendChild(div);
- });
-}
-
-async function approveDeposit(id,button){
- const ok=confirm("Bạn đã kiểm tra Vietcombank và chắc chắn đã nhận đúng số tiền của yêu cầu này chưa?");
- if(!ok)return;
- button.disabled=true;
- button.textContent="Đang xử lý...";
- const {data,error}=await supabaseClient.rpc("admin_approve_deposit",{p_deposit_id:id});
- if(error){
-  alert("Không xác nhận được: "+error.message);
-  button.disabled=false;
-  button.textContent="XÁC NHẬN ĐÃ NHẬN TIỀN";
-  return;
- }
- alert(data||"Đã xử lý yêu cầu.");
- await loadAdminDeposits();
-}
-
-async function loadAdminProducts(){
- const box=document.getElementById("adminProductInfo");
- const {data,error}=await supabaseClient.from("products")
-  .select("id,title,price,is_available").order("id");
- if(error){box.textContent="Không tải được sản phẩm: "+error.message;return;}
- if(!data.length){box.textContent="Chưa có sản phẩm trong bảng products.";return;}
- box.innerHTML="";
- data.forEach(p=>{
-  const div=document.createElement("div");
-  div.className="item";
-  div.textContent=p.title+" - "+money(p.price)+" - "+(p.is_available?"Đang bán":"Đã ẩn");
-  box.appendChild(div);
- });
-}
-
-async function adminLogout(){
- await supabaseClient.auth.signOut();
- currentUser=null;
- document.getElementById("adminPanel").classList.add("hidden");
- alert("Đã đăng xuất Admin.");
-}
-
-async function loadProducts(){
- const {data,error}=await supabaseClient.from("products")
-  .select("id,title,description,price,image_url,is_available")
-  .eq("is_available",true).order("id");
- if(error||!data||!data.length)return;
- const box=document.getElementById("products");
- box.innerHTML="";
- data.forEach(p=>{
-  const card=document.createElement("div");
-  card.className="card";
-  const img=document.createElement("img");
-  img.src=p.image_url||"https://placehold.co/600x350/24242c/ffffff?text=LIEN+QUAN";
-  img.alt=p.title;
-  const title=document.createElement("h3");
-  title.textContent=p.title;
-  const desc=document.createElement("p");
-  desc.textContent=p.description||"";
-  const price=document.createElement("p");
-  price.className="price";
-  price.textContent=money(p.price);
-  const btn=document.createElement("button");
-  btn.textContent="Mua tài khoản";
-  btn.onclick=needLogin;
-  card.append(img,title,desc,price,btn);
-  box.appendChild(card);
- });
-}
-
-(async function init(){
- await loadProducts();
- const {data}=await supabaseClient.auth.getSession();
- if(data.session){
-  currentUser=data.session.user;
-  const {data:isAdmin}=await supabaseClient.rpc("is_admin");
-  if(isAdmin===true){
-   document.getElementById("adminPanel").classList.remove("hidden");
-   await loadAdminDeposits();
-   await loadAdminProducts();
-  }else{
-   await showCustomer(currentUser);
-  }
- }
-})();
-</script>
-</body>
-</html>
+GRANT EXECUTE ON FUNCTION public.admin_add_product(
+  text, text, bigint, text, text, text
+) TO authenticated;
