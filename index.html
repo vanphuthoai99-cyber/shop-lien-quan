@@ -121,10 +121,10 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <h3>NẠP TIỀN VÀO VÍ</h3>
 <label>Chọn số tiền muốn nạp</label>
 <select id="depositAmount">
-<option value="50000">50.000đ</option>
-<option value="100000">100.000đ</option>
-<option value="200000">200.000đ</option>
-<option value="500000">500.000đ</option>
+<option value="50000">10.000đ</option>
+<option value="100000">20.000đ</option>
+<option value="200000">50.000đ</option>
+<option value="500000">100.000đ</option>
 <option value="1000000">1.000.000đ</option>
 </select>
 <button onclick="createDeposit()">TẠO MÃ NẠP TIỀN</button>
@@ -197,6 +197,10 @@ function statusText(s){
  return s;
 }
 function needLogin(){
+ if(currentUser){
+   alert("Bạn đã đăng nhập. Chức năng mua tài khoản đang được hoàn thiện.");
+   return;
+ }
  document.getElementById("customerBox").scrollIntoView();
  alert("Vui lòng đăng nhập trước khi mua tài khoản.");
 }
