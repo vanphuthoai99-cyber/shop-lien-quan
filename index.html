@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -49,30 +50,28 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 #wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
 #wheelHistory{font-size:14px;text-align:left;max-height:220px;overflow:auto}
 
-/* HỘP NHẠC */
-#musicBox{
+/* TRÌNH PHÁT NHẠC ẨN */
+#youtubePlayer{
  position:fixed;
- left:10px;
- bottom:10px;
- z-index:999;
- width:230px;
- background:#202027;
- border:1px solid #ff4545;
- border-radius:12px;
- padding:10px;
- box-shadow:0 3px 15px #0009;
+ width:1px;
+ height:1px;
+ left:-100px;
+ bottom:-100px;
+ overflow:hidden;
+ opacity:0.01;
+ pointer-events:none;
+ z-index:-1;
 }
-#musicTitle{color:#ffd166;font-size:12px;font-weight:bold;margin-bottom:7px}
-#musicButton{width:100%;margin:0 0 7px;background:linear-gradient(45deg,#e53935,#ff9800)}
-#youtubePlayer{width:200px;height:200px;max-width:100%;margin:auto;border-radius:8px;overflow:hidden}
-#youtubePlayer iframe{width:100%;height:100%}
+#youtubePlayer iframe{
+ width:1px!important;
+ height:1px!important;
+}
 
 @media(max-width:600px){
  .container{padding:12px}
  nav a{display:inline-block;margin:6px}
  #adminLoginBtn{font-size:12px;padding:9px}
  .card img{height:180px}
- #musicBox{width:215px}
 }
 </style>
 </head>
@@ -262,13 +261,8 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
 
-<!-- HỘP NHẠC -->
-<div id="musicBox">
- <div id="musicTitle">🎵 CARTOON - ON & ON</div>
- <button id="musicButton" onclick="toggleMusic()">▶ BẬT NHẠC</button>
- <div id="youtubePlayer"></div>
- <p class="small">Nhấn nút để phát nhạc</p>
-</div>
+<!-- TRÌNH PHÁT YOUTUBE ẨN -->
+<div id="youtubePlayer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -1154,55 +1148,73 @@ async function loadWheelHistory(){
  document.head.appendChild(style);
 })();
 
-/* NHẠC YOUTUBE: CARTOON - ON & ON */
+/* NHẠC NỀN YOUTUBE - VIDEO BẠN ĐÃ CHỌN */
+const MUSIC_VIDEO_ID="kDdv4rgBMRI";
 let musicPlayer=null;
 let musicReady=false;
-let musicPlaying=false;
+let musicStarted=false;
 
-/* Tạo trình phát trước khi tải YouTube API */
+function startBackgroundMusic(){
+ if(!musicReady||!musicPlayer)return;
+
+ try{
+  musicPlayer.unMute();
+  musicPlayer.setVolume(70);
+  musicPlayer.playVideo();
+  musicStarted=true;
+ }catch(error){
+  console.log("Trình duyệt chưa cho phép phát nhạc:",error);
+ }
+}
+
 window.onYouTubeIframeAPIReady=function(){
  musicPlayer=new YT.Player("youtubePlayer",{
-  height:"200",
-  width:"200",
-  videoId:"K4DyBUG242c",
+  width:"1",
+  height:"1",
+  videoId:MUSIC_VIDEO_ID,
   playerVars:{
-   autoplay:0,
-   controls:1,
+   autoplay:1,
+   controls:0,
+   disablekb:1,
+   fs:0,
+   playsinline:1,
+   rel:0,
    loop:1,
-   playlist:"K4DyBUG242c",
-   rel:0
+   playlist:MUSIC_VIDEO_ID,
+   mute:0
   },
   events:{
-   onReady:function(){
+   onReady:function(event){
     musicReady=true;
-    document.getElementById("musicButton").textContent="▶ BẬT NHẠC";
+    event.target.setVolume(70);
+
+    /* Thử phát nhạc ngay khi trang tải */
+    startBackgroundMusic();
    },
    onStateChange:function(event){
-    if(event.data===YT.PlayerState.PLAYING){
-     musicPlaying=true;
-     document.getElementById("musicButton").textContent="⏸ TẠM DỪNG NHẠC";
+    /* Nếu video kết thúc thì phát lại */
+    if(event.data===YT.PlayerState.ENDED){
+     musicPlayer.seekTo(0);
+     musicPlayer.playVideo();
     }
-    if(event.data===YT.PlayerState.PAUSED||event.data===YT.PlayerState.ENDED){
-     musicPlaying=false;
-     document.getElementById("musicButton").textContent="▶ BẬT NHẠC";
-    }
+   },
+   onError:function(error){
+    console.log("Lỗi trình phát nhạc YouTube:",error.data);
    }
   }
  });
 };
 
-function toggleMusic(){
- if(!musicReady){
-  alert("Nhạc đang tải. Bạn đợi vài giây rồi nhấn lại nhé.");
-  return;
- }
-
- if(musicPlaying){
-  musicPlayer.pauseVideo();
- }else{
-  musicPlayer.playVideo();
+/* Nếu iPhone chặn tự phát, thử phát sau lần chạm đầu tiên */
+function unlockBackgroundMusic(){
+ if(!musicStarted&&musicReady){
+  startBackgroundMusic();
  }
 }
+
+document.addEventListener("click",unlockBackgroundMusic,{once:true});
+document.addEventListener("touchstart",unlockBackgroundMusic,{once:true,passive:true});
+document.addEventListener("keydown",unlockBackgroundMusic,{once:true});
 
 /* Tải YouTube Player API */
 const youtubeScript=document.createElement("script");
