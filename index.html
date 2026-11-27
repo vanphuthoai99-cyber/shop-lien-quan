@@ -22,7 +22,8 @@ h2{color:#ff5252;text-align:center}
 .price{color:#ff5252;font-size:20px;font-weight:bold}
 button{background:#e53935;color:white;border:0;padding:12px 18px;border-radius:7px;font-weight:bold;cursor:pointer;margin:4px}
 button:disabled{opacity:.5;cursor:not-allowed}
-input,select{width:100%;padding:12px;margin:7px 0;border-radius:6px;border:1px solid #555;background:#15151b;color:white}
+input,select,textarea{width:100%;padding:12px;margin:7px 0;border-radius:6px;border:1px solid #555;background:#15151b;color:white;font-size:16px}
+textarea{min-height:80px;resize:vertical}
 .small{color:#aaa;font-size:13px}
 .green{color:#65df8c}
 .yellow{color:#ffd166}
@@ -36,7 +37,16 @@ input,select{width:100%;padding:12px;margin:7px 0;border-radius:6px;border:1px s
 footer{text-align:center;background:#1b1b22;padding:25px;color:#aaa;margin-top:30px}
 a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;padding:12px 18px;border-radius:7px;font-weight:bold}
 .account-result{background:#10251a;border:1px solid #27864b;padding:15px;border-radius:8px;margin-top:12px;overflow-wrap:anywhere}
-.account-result p{margin:9px 0}
+#imagePreview{width:100%;max-width:320px;max-height:220px;object-fit:contain;background:#15151b;border-radius:8px;margin:10px 0}
+.admin-form{border:1px solid #555;padding:15px;border-radius:10px;margin-top:15px}
+.admin-form h3{color:#ffd166}
+.product-admin-image{width:75px;height:65px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:10px}
+@media(max-width:600px){
+ .container{padding:12px}
+ nav a{display:inline-block;margin:6px}
+ #adminLoginBtn{font-size:12px;padding:9px}
+ .card img{height:180px}
+}
 </style>
 </head>
 <body>
@@ -167,6 +177,36 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <h2>QUẢN TRỊ ADMIN</h2>
 
 <div class="panel">
+<h3>THÊM TÀI KHOẢN LIÊN QUÂN</h3>
+<p class="small">Chọn ảnh trong thư viện iPhone, nhập thông tin và đăng bán.</p>
+
+<div class="admin-form">
+<label>Ảnh tài khoản</label>
+<input id="productImage" type="file" accept="image/*">
+<img id="imagePreview" class="hidden" alt="Xem trước ảnh">
+<p id="imageStatus" class="small"></p>
+
+<label>Tên sản phẩm</label>
+<input id="productTitle" type="text" placeholder="Ví dụ: Acc Liên Quân VIP #004">
+
+<label>Mô tả tài khoản</label>
+<textarea id="productDescription" placeholder="Ví dụ: 120 tướng, 80 trang phục, rank Cao Thủ..."></textarea>
+
+<label>Giá bán (VNĐ)</label>
+<input id="productPrice" type="number" min="1000" placeholder="Ví dụ: 500000">
+
+<label>Tên đăng nhập tài khoản game</label>
+<input id="productLogin" type="text" placeholder="Tài khoản game">
+
+<label>Mật khẩu tài khoản game</label>
+<input id="productGamePassword" type="text" placeholder="Mật khẩu game">
+
+<button id="addProductButton" onclick="adminAddProduct()">TẢI ẢNH VÀ ĐĂNG BÁN</button>
+<p id="addProductStatus"></p>
+</div>
+</div>
+
+<div class="panel">
 <h3>YÊU CẦU NẠP TIỀN</h3>
 <button onclick="loadAdminDeposits()">LÀM MỚI DANH SÁCH</button>
 <div id="adminDeposits">Chưa tải dữ liệu.</div>
@@ -174,7 +214,7 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 
 <div class="panel">
 <h3>QUẢN LÝ SẢN PHẨM</h3>
-<p>Danh sách sản phẩm đang được lấy từ bảng products trong Supabase.</p>
+<button onclick="loadAdminProducts()">LÀM MỚI SẢN PHẨM</button>
 <div id="adminProductInfo"></div>
 </div>
 
@@ -197,9 +237,12 @@ const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const BANK_ACCOUNT="1066104233";
 const BANK_NAME="VCB";
 const ACCOUNT_NAME="VAN PHU THOAI";
+const IMAGE_BUCKET="product-images";
 
 let currentUser=null;
 let currentDepositContent="";
+let isAdminLoggedIn=false;
+let selectedImage=null;
 
 function money(n){
  return Number(n||0).toLocaleString("vi-VN")+"đ";
@@ -294,9 +337,11 @@ async function customerLogin(){
 /* HIỂN THỊ TÀI KHOẢN KHÁCH */
 async function showCustomer(user){
  currentUser=user;
+ isAdminLoggedIn=false;
 
  document.getElementById("customerForms").classList.add("hidden");
  document.getElementById("customerInfo").classList.remove("hidden");
+ document.getElementById("adminPanel").classList.add("hidden");
 
  document.getElementById("customerEmailText").textContent="Email: "+(user.email||"");
  document.getElementById("customerPhoneText").textContent="Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
@@ -311,6 +356,7 @@ async function showCustomer(user){
 async function customerLogout(){
  await supabaseClient.auth.signOut();
  currentUser=null;
+ isAdminLoggedIn=false;
 
  document.getElementById("customerForms").classList.remove("hidden");
  document.getElementById("customerInfo").classList.add("hidden");
@@ -349,12 +395,12 @@ async function createDeposit(){
 
  showStatus("Đang tạo yêu cầu nạp tiền...");
 
- const {data,error}=await supabaseClient.from("deposit_requests").insert({
+ const {error}=await supabaseClient.from("deposit_requests").insert({
   user_id:currentUser.id,
   amount:amount,
   transfer_content:content,
   status:"pending"
- }).select().single();
+ });
 
  if(error){
   showStatus("Không tạo được yêu cầu: "+error.message);
@@ -635,13 +681,146 @@ async function adminLogin(){
  }
 
  currentUser=data.user;
+ isAdminLoggedIn=true;
 
  msg.textContent="Đăng nhập Admin thành công!";
  document.getElementById("adminLoginBox").style.display="none";
  document.getElementById("adminPanel").classList.remove("hidden");
+ document.getElementById("customerInfo").classList.add("hidden");
+ document.getElementById("customerForms").classList.remove("hidden");
 
  await loadAdminDeposits();
  await loadAdminProducts();
+}
+
+/* XEM TRƯỚC ẢNH TỪ IPHONE */
+document.getElementById("productImage").addEventListener("change",function(){
+ const file=this.files[0];
+ const preview=document.getElementById("imagePreview");
+ const status=document.getElementById("imageStatus");
+
+ selectedImage=file||null;
+
+ if(!file){
+  preview.classList.add("hidden");
+  status.textContent="";
+  return;
+ }
+
+ if(!file.type.startsWith("image/")){
+  alert("Vui lòng chọn một file hình ảnh.");
+  this.value="";
+  selectedImage=null;
+  preview.classList.add("hidden");
+  return;
+ }
+
+ if(file.size>8*1024*1024){
+  alert("Ảnh quá lớn. Vui lòng chọn ảnh nhỏ hơn 8MB.");
+  this.value="";
+  selectedImage=null;
+  preview.classList.add("hidden");
+  return;
+ }
+
+ preview.src=URL.createObjectURL(file);
+ preview.classList.remove("hidden");
+ status.textContent="Đã chọn: "+file.name;
+});
+
+/* ADMIN TẢI ẢNH VÀ ĐĂNG SẢN PHẨM */
+async function adminAddProduct(){
+ if(!currentUser||!isAdminLoggedIn){
+  alert("Vui lòng đăng nhập Admin.");
+  return;
+ }
+
+ const title=document.getElementById("productTitle").value.trim();
+ const description=document.getElementById("productDescription").value.trim();
+ const price=Number(document.getElementById("productPrice").value);
+ const accountLogin=document.getElementById("productLogin").value.trim();
+ const accountPassword=document.getElementById("productGamePassword").value.trim();
+ const status=document.getElementById("addProductStatus");
+ const button=document.getElementById("addProductButton");
+
+ if(!selectedImage){
+  alert("Bạn chưa chọn ảnh sản phẩm.");
+  return;
+ }
+ if(!title||!price||price<=0||!accountLogin||!accountPassword){
+  alert("Vui lòng nhập đầy đủ tên, giá, tài khoản và mật khẩu game.");
+  return;
+ }
+
+ button.disabled=true;
+ button.textContent="ĐANG TẢI ẢNH...";
+ status.textContent="Đang tải ảnh lên kho Storage...";
+
+ try{
+  const safeName=selectedImage.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+  const filePath=currentUser.id+"/"+Date.now()+"_"+safeName;
+
+  const {data:uploadData,error:uploadError}=await supabaseClient.storage
+   .from(IMAGE_BUCKET)
+   .upload(filePath,selectedImage,{
+    cacheControl:"3600",
+    upsert:false,
+    contentType:selectedImage.type
+   });
+
+  if(uploadError){
+   throw new Error("Lỗi tải ảnh: "+uploadError.message);
+  }
+
+  const {data:urlData}=supabaseClient.storage
+   .from(IMAGE_BUCKET)
+   .getPublicUrl(uploadData.path);
+
+  const imageUrl=urlData.publicUrl;
+
+  button.textContent="ĐANG LƯU SẢN PHẨM...";
+  status.textContent="Ảnh đã tải lên. Đang lưu sản phẩm...";
+
+  const {data,error}=await supabaseClient.rpc("admin_add_product",{
+   p_title:title,
+   p_description:description,
+   p_price:price,
+   p_image_url:imageUrl,
+   p_account_login:accountLogin,
+   p_account_password:accountPassword
+  });
+
+  if(error){
+   throw new Error("Ảnh đã tải lên nhưng lưu sản phẩm thất bại: "+error.message);
+  }
+
+  if(data&&data.error){
+   throw new Error(data.error);
+  }
+
+  alert("ĐĂNG BÁN SẢN PHẨM THÀNH CÔNG!");
+
+  document.getElementById("productTitle").value="";
+  document.getElementById("productDescription").value="";
+  document.getElementById("productPrice").value="";
+  document.getElementById("productLogin").value="";
+  document.getElementById("productGamePassword").value="";
+  document.getElementById("productImage").value="";
+  document.getElementById("imagePreview").classList.add("hidden");
+  document.getElementById("imageStatus").textContent="";
+  selectedImage=null;
+
+  status.textContent="Đã đăng bán thành công.";
+  await loadAdminProducts();
+  await loadProducts();
+
+ }catch(error){
+  status.textContent=error.message;
+  alert(error.message);
+ }finally{
+  button.disabled=false;
+  button.textContent="TẢI ẢNH VÀ ĐĂNG BÁN";
+ }
 }
 
 /* ADMIN XEM YÊU CẦU NẠP TIỀN */
@@ -723,7 +902,7 @@ async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
  const {data,error}=await supabaseClient.from("products")
-  .select("id,title,price,is_available")
+  .select("id,title,price,image_url,is_available")
   .order("id");
 
  if(error){
@@ -741,7 +920,19 @@ async function loadAdminProducts(){
  data.forEach(p=>{
   const div=document.createElement("div");
   div.className="item";
-  div.textContent=p.title+" - "+money(p.price)+" - "+(p.is_available?"Đang bán":"Đã ẩn");
+
+  if(p.image_url){
+   const img=document.createElement("img");
+   img.src=p.image_url;
+   img.className="product-admin-image";
+   img.alt=p.title;
+   div.appendChild(img);
+  }
+
+  const text=document.createElement("span");
+  text.textContent=p.title+" - "+money(p.price)+" - "+(p.is_available?"Đang bán":"Đã ẩn");
+  div.appendChild(text);
+
   box.appendChild(div);
  });
 }
@@ -751,8 +942,11 @@ async function adminLogout(){
  await supabaseClient.auth.signOut();
 
  currentUser=null;
+ isAdminLoggedIn=false;
 
  document.getElementById("adminPanel").classList.add("hidden");
+ document.getElementById("customerForms").classList.remove("hidden");
+ document.getElementById("customerInfo").classList.add("hidden");
 
  alert("Đã đăng xuất Admin.");
 }
@@ -813,7 +1007,9 @@ async function loadProducts(){
   const {data:isAdmin}=await supabaseClient.rpc("is_admin");
 
   if(isAdmin===true){
+   isAdminLoggedIn=true;
    document.getElementById("adminPanel").classList.remove("hidden");
+   document.getElementById("customerForms").classList.remove("hidden");
    await loadAdminDeposits();
    await loadAdminProducts();
   }else{
