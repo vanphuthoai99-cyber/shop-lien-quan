@@ -49,24 +49,11 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 #wheelSpin{background:linear-gradient(45deg,#e53935,#ff9800);color:white;border:0;padding:14px 30px;border-radius:30px;font-size:18px;font-weight:bold}
 #wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
 #wheelHistory{font-size:14px;text-align:left;max-height:220px;overflow:auto}
-
-/* TRÌNH PHÁT YOUTUBE ẨN */
-#youtubePlayer{
- position:fixed;
- width:200px;
- height:200px;
- left:-250px;
- top:0;
- overflow:hidden;
- opacity:0;
- pointer-events:none;
- z-index:-1;
-}
-#youtubePlayer iframe{
- width:200px!important;
- height:200px!important;
-}
-
+.announcement-card{background:#202027;border:1px solid #8d3434;border-left:4px solid #e53935;border-radius:10px;padding:15px;margin:12px 0;overflow-wrap:anywhere}
+.announcement-card h3{color:#ffd166;margin-top:0}
+.announcement-date{color:#aaa;font-size:12px}
+#youtubePlayer{position:fixed;width:200px;height:200px;left:-250px;top:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-1}
+#youtubePlayer iframe{width:200px!important;height:200px!important}
 @media(max-width:600px){
  .container{padding:12px}
  nav a{display:inline-block;margin:6px}
@@ -96,6 +83,7 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 
 <nav>
 <a href="#">Trang chủ</a>
+<a href="#announcementSection">Thông báo</a>
 <a href="#accounts">Danh sách acc</a>
 <a href="#customerBox">Tài khoản của tôi</a>
 <a href="#wheelSection">Vòng quay</a>
@@ -107,6 +95,14 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <p>Tìm kiếm tài khoản phù hợp với bạn</p>
 <button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
 </section>
+
+<!-- THÔNG BÁO CÔNG KHAI -->
+<div class="container" id="announcementSection">
+<h2>📢 THÔNG BÁO TỪ SHOP</h2>
+<div id="announcementList">
+<p class="small">Đang tải thông báo...</p>
+</div>
+</div>
 
 <div class="container" id="accounts">
 <h2>TÀI KHOẢN MỚI NHẤT</h2>
@@ -194,6 +190,15 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <p id="adminCreditStatus"></p>
 </div>
 
+<!-- KHUNG ADMIN ĐĂNG THÔNG BÁO -->
+<div class="panel">
+<h3 style="color:#ffd166">📢 ĐĂNG THÔNG BÁO LÊN WEBSITE</h3>
+<input id="announcementTitle" type="text" maxlength="150" placeholder="Nhập tiêu đề thông báo">
+<textarea id="announcementContent" maxlength="10000" placeholder="Nhập nội dung thông báo..."></textarea>
+<button id="publishAnnouncementButton" onclick="adminPublishAnnouncement()">ĐĂNG THÔNG BÁO</button>
+<p id="announcementAdminStatus"></p>
+</div>
+
 <div class="panel">
 <h3>THÊM TÀI KHOẢN LIÊN QUÂN</h3>
 <p class="small">Chọn ảnh trong thư viện điện thoại, nhập thông tin và đăng bán.</p>
@@ -202,22 +207,16 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <input id="productImage" type="file" accept="image/*">
 <img id="imagePreview" class="hidden" alt="Xem trước ảnh">
 <p id="imageStatus" class="small"></p>
-
 <label>Tên sản phẩm</label>
 <input id="productTitle" type="text" placeholder="Ví dụ: Acc Liên Quân VIP #004">
-
 <label>Mô tả tài khoản</label>
 <textarea id="productDescription" placeholder="Ví dụ: 120 tướng, 80 trang phục, rank Cao Thủ..."></textarea>
-
 <label>Giá bán (VNĐ)</label>
 <input id="productPrice" type="number" min="1000" placeholder="Ví dụ: 500000">
-
 <label>Tên đăng nhập tài khoản game</label>
 <input id="productLogin" type="text" placeholder="Tài khoản game">
-
 <label>Mật khẩu tài khoản game</label>
 <input id="productGamePassword" type="text" placeholder="Mật khẩu game">
-
 <button id="addProductButton" onclick="adminAddProduct()">TẢI ẢNH VÀ ĐĂNG BÁN</button>
 <p id="addProductStatus"></p>
 </div>
@@ -257,7 +256,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 </footer>
 
 <div id="youtubePlayer"></div>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
@@ -301,6 +299,7 @@ function needLogin(productId){
  else alert("Vui lòng chọn tài khoản trong danh sách sản phẩm.");
 }
 
+/* ĐĂNG KÝ VÀ ĐĂNG NHẬP KHÁCH HÀNG */
 async function customerRegister(){
  const email=document.getElementById("customerEmail").value.trim();
  const phone=document.getElementById("customerPhone").value.trim();
@@ -379,6 +378,7 @@ async function customerLogout(){
  showStatus("Đã đăng xuất.");
 }
 
+/* VÍ KHÁCH HÀNG VÀ ADMIN */
 async function loadWallet(){
  if(!currentUser||isAdminLoggedIn)return;
 
@@ -431,7 +431,7 @@ async function adminCreditWallet(){
  await loadAdminWalletBalance();
 }
 
-/* KHÁCH TỰ NHẬP SỐ TIỀN NẠP */
+/* TẠO YÊU CẦU NẠP TIỀN */
 async function createDeposit(){
  if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng.");
@@ -538,6 +538,7 @@ async function loadWalletHistory(){
  });
 }
 
+/* MUA TÀI KHOẢN */
 async function buyProduct(productId){
  if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
@@ -642,6 +643,7 @@ async function loadPurchaseHistory(){
  });
 }
 
+/* ĐĂNG NHẬP ADMIN */
 document.getElementById("adminLoginBtn").onclick=()=>{
  document.getElementById("adminLoginBox").style.display="block";
 };
@@ -686,6 +688,93 @@ async function adminLogin(){
  await loadAdminProducts();
 }
 
+/* ADMIN ĐĂNG THÔNG BÁO */
+async function loadAnnouncements(){
+ const box=document.getElementById("announcementList");
+ if(!box)return;
+
+ box.textContent="Đang tải thông báo...";
+
+ const {data,error}=await supabaseClient
+  .from("announcements")
+  .select("id,title,content,created_at")
+  .order("created_at",{ascending:false})
+  .limit(30);
+
+ if(error){
+  box.textContent="Không tải được thông báo: "+error.message;
+  return;
+ }
+
+ box.innerHTML="";
+
+ if(!data||data.length===0){
+  box.textContent="Hiện chưa có thông báo.";
+  return;
+ }
+
+ data.forEach(item=>{
+  const card=document.createElement("div");
+  card.className="announcement-card";
+
+  const title=document.createElement("h3");
+  title.textContent="📢 "+item.title;
+
+  const content=document.createElement("p");
+  content.textContent=item.content;
+  content.style.whiteSpace="pre-wrap";
+
+  const date=document.createElement("p");
+  date.className="announcement-date";
+  date.textContent="Đăng lúc: "+new Date(item.created_at).toLocaleString("vi-VN");
+
+  card.append(title,content,date);
+  box.appendChild(card);
+ });
+}
+
+async function adminPublishAnnouncement(){
+ const status=document.getElementById("announcementAdminStatus");
+ const button=document.getElementById("publishAnnouncementButton");
+
+ if(!currentUser||!isAdminLoggedIn){
+  status.textContent="Vui lòng đăng nhập Admin.";
+  return;
+ }
+
+ const title=document.getElementById("announcementTitle").value.trim();
+ const content=document.getElementById("announcementContent").value.trim();
+
+ if(!title||!content){
+  status.textContent="Vui lòng nhập đầy đủ tiêu đề và nội dung.";
+  return;
+ }
+
+ button.disabled=true;
+ status.textContent="Đang đăng thông báo...";
+
+ try{
+  const {error}=await supabaseClient.rpc("admin_add_announcement",{
+   p_title:title,
+   p_content:content
+  });
+
+  if(error)throw error;
+
+  document.getElementById("announcementTitle").value="";
+  document.getElementById("announcementContent").value="";
+
+  status.textContent="Đăng thông báo thành công!";
+  await loadAnnouncements();
+
+ }catch(error){
+  status.textContent="Lỗi đăng thông báo: "+error.message;
+ }finally{
+  button.disabled=false;
+ }
+}
+
+/* XEM TRƯỚC ẢNH SẢN PHẨM */
 document.getElementById("productImage").addEventListener("change",function(){
  const file=this.files[0];
  const preview=document.getElementById("imagePreview");
@@ -720,6 +809,7 @@ document.getElementById("productImage").addEventListener("change",function(){
  status.textContent="Đã chọn: "+file.name;
 });
 
+/* ADMIN THÊM SẢN PHẨM */
 async function adminAddProduct(){
  if(!currentUser||!isAdminLoggedIn){alert("Vui lòng đăng nhập Admin.");return;}
 
@@ -795,6 +885,7 @@ async function adminAddProduct(){
  }
 }
 
+/* ADMIN DUYỆT NẠP TIỀN */
 async function loadAdminDeposits(){
  const box=document.getElementById("adminDeposits");
  box.textContent="Đang tải...";
@@ -856,6 +947,7 @@ async function approveDeposit(id,button){
  await loadAdminDeposits();
 }
 
+/* QUẢN LÝ SẢN PHẨM ADMIN */
 async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
@@ -897,6 +989,7 @@ async function adminLogout(){
  alert("Đã đăng xuất Admin.");
 }
 
+/* TẢI SẢN PHẨM NGOÀI TRANG CHỦ */
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
@@ -939,6 +1032,7 @@ async function loadProducts(){
  });
 }
 
+/* LỊCH SỬ VÒNG QUAY */
 async function loadWheelHistory(){
  const box=document.getElementById("wheelHistory");
 
@@ -980,6 +1074,7 @@ async function loadWheelHistory(){
 /* KHỞI ĐỘNG WEBSITE */
 (async function init(){
  await loadProducts();
+ await loadAnnouncements();
 
  const {data}=await supabaseClient.auth.getSession();
 
@@ -1228,7 +1323,6 @@ youtubeScript.onerror=function(){
  console.log("Không tải được YouTube Player API");
 };
 document.head.appendChild(youtubeScript);
-
 </script>
 </body>
 </html>
