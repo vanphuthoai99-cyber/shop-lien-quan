@@ -1,10 +1,10 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>SHOP LIÊN QUÂN</title>
+
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#101014;color:white;font-family:Arial,sans-serif}
@@ -45,17 +45,38 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 #wheelSection h2{color:#ffd54f}
 #wheelCanvas{width:100%;max-width:360px;display:block;margin:15px auto}
 #wheelPointer{font-size:30px;color:#ffeb3b;margin-bottom:-20px;position:relative;z-index:2}
-#wheelSpin{background:linear-gradient(45deg,#e53935,#ff9800);color:white;border:0;padding:14px 30px;border-radius:30px;font-size:18px;font-weight:bold;cursor:pointer}
+#wheelSpin{background:linear-gradient(45deg,#e53935,#ff9800);color:white;border:0;padding:14px 30px;border-radius:30px;font-size:18px;font-weight:bold}
 #wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
 #wheelHistory{font-size:14px;text-align:left;max-height:220px;overflow:auto}
+
+/* HỘP NHẠC */
+#musicBox{
+ position:fixed;
+ left:10px;
+ bottom:10px;
+ z-index:999;
+ width:230px;
+ background:#202027;
+ border:1px solid #ff4545;
+ border-radius:12px;
+ padding:10px;
+ box-shadow:0 3px 15px #0009;
+}
+#musicTitle{color:#ffd166;font-size:12px;font-weight:bold;margin-bottom:7px}
+#musicButton{width:100%;margin:0 0 7px;background:linear-gradient(45deg,#e53935,#ff9800)}
+#youtubePlayer{width:200px;height:200px;max-width:100%;margin:auto;border-radius:8px;overflow:hidden}
+#youtubePlayer iframe{width:100%;height:100%}
+
 @media(max-width:600px){
-.container{padding:12px}
-nav a{display:inline-block;margin:6px}
-#adminLoginBtn{font-size:12px;padding:9px}
-.card img{height:180px}
+ .container{padding:12px}
+ nav a{display:inline-block;margin:6px}
+ #adminLoginBtn{font-size:12px;padding:9px}
+ .card img{height:180px}
+ #musicBox{width:215px}
 }
 </style>
 </head>
+
 <body>
 
 <button id="adminLoginBtn">ĐĂNG NHẬP ADMIN</button>
@@ -241,7 +262,16 @@ nav a{display:inline-block;margin:6px}
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
 
+<!-- HỘP NHẠC -->
+<div id="musicBox">
+ <div id="musicTitle">🎵 CARTOON - ON & ON</div>
+ <button id="musicButton" onclick="toggleMusic()">▶ BẬT NHẠC</button>
+ <div id="youtubePlayer"></div>
+ <p class="small">Nhấn nút để phát nhạc</p>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
 const SUPABASE_URL="https://fsygieahftwmyzziwtuw.supabase.co";
 const SUPABASE_KEY="sb_publishable_EH8EUPNZ07XCS_LhmJzgfQ_uxEHwEGl";
@@ -274,16 +304,13 @@ function showStatus(message){
 }
 
 function needLogin(productId){
- if(!currentUser || isAdminLoggedIn){
+ if(!currentUser||isAdminLoggedIn){
   document.getElementById("customerBox").scrollIntoView();
   alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
   return;
  }
- if(productId){
-  buyProduct(productId);
- }else{
-  alert("Vui lòng chọn tài khoản trong danh sách sản phẩm.");
- }
+ if(productId)buyProduct(productId);
+ else alert("Vui lòng chọn tài khoản trong danh sách sản phẩm.");
 }
 
 async function customerRegister(){
@@ -305,10 +332,7 @@ async function customerRegister(){
   email,password,options:{data:{phone}}
  });
 
- if(error){
-  showStatus("Lỗi đăng ký: "+error.message);
-  return;
- }
+ if(error){showStatus("Lỗi đăng ký: "+error.message);return;}
 
  if(data.session){
   await showCustomer(data.user);
@@ -330,10 +354,7 @@ async function customerLogin(){
  showStatus("Đang đăng nhập...");
  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
- if(error){
-  showStatus("Đăng nhập lỗi: "+error.message);
-  return;
- }
+ if(error){showStatus("Đăng nhập lỗi: "+error.message);return;}
 
  await showCustomer(data.user);
  showStatus("Đăng nhập thành công!");
@@ -371,39 +392,30 @@ async function customerLogout(){
 }
 
 async function loadWallet(){
- if(!currentUser || isAdminLoggedIn)return;
+ if(!currentUser||isAdminLoggedIn)return;
 
  const {data,error}=await supabaseClient.from("wallets")
-  .select("balance")
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
+  .select("balance").eq("user_id",currentUser.id).maybeSingle();
 
  if(error){
   document.getElementById("walletBalance").textContent="Chưa tải được";
   return;
  }
-
  document.getElementById("walletBalance").textContent=money(data?data.balance:0);
 }
 
 async function loadAdminWalletBalance(){
  const display=document.getElementById("adminWalletBalance");
 
- if(!currentUser || !isAdminLoggedIn){
+ if(!currentUser||!isAdminLoggedIn){
   display.textContent="Vui lòng đăng nhập Admin";
   return;
  }
 
  const {data,error}=await supabaseClient.from("wallets")
-  .select("balance")
-  .eq("user_id",currentUser.id)
-  .maybeSingle();
+  .select("balance").eq("user_id",currentUser.id).maybeSingle();
 
- if(error){
-  display.textContent="Lỗi tải số dư: "+error.message;
-  return;
- }
-
+ if(error){display.textContent="Lỗi tải số dư: "+error.message;return;}
  display.textContent=money(data?data.balance:0);
 }
 
@@ -411,29 +423,20 @@ async function adminCreditWallet(){
  const amount=Number(document.getElementById("adminCreditAmount").value);
  const status=document.getElementById("adminCreditStatus");
 
- if(!currentUser || !isAdminLoggedIn){
+ if(!currentUser||!isAdminLoggedIn){
   status.textContent="Bạn chưa đăng nhập Admin.";
   return;
  }
-
  if(!Number.isSafeInteger(amount)||amount<=0){
   status.textContent="Vui lòng nhập số tiền hợp lệ.";
   return;
  }
-
  if(!confirm("Xác nhận cộng "+money(amount)+" vào ví Admin?"))return;
 
  status.textContent="Đang xử lý...";
+ const {data,error}=await supabaseClient.rpc("admin_credit_own_wallet",{p_amount:amount});
 
- const {data,error}=await supabaseClient.rpc(
-  "admin_credit_own_wallet",
-  {p_amount:amount}
- );
-
- if(error){
-  status.textContent="Lỗi: "+error.message;
-  return;
- }
+ if(error){status.textContent="Lỗi: "+error.message;return;}
 
  document.getElementById("adminCreditAmount").value="";
  status.textContent="Đã cộng tiền thành công!";
@@ -441,7 +444,7 @@ async function adminCreditWallet(){
 }
 
 async function createDeposit(){
- if(!currentUser || isAdminLoggedIn){
+ if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng.");
   return;
  }
@@ -456,10 +459,7 @@ async function createDeposit(){
   user_id:currentUser.id,amount,transfer_content:content,status:"pending"
  });
 
- if(error){
-  showStatus("Không tạo được yêu cầu: "+error.message);
-  return;
- }
+ if(error){showStatus("Không tạo được yêu cầu: "+error.message);return;}
 
  currentDepositContent=content;
 
@@ -488,22 +488,15 @@ async function copyTransferContent(){
 }
 
 async function loadDepositHistory(){
- if(!currentUser || isAdminLoggedIn)return;
+ if(!currentUser||isAdminLoggedIn)return;
  const box=document.getElementById("depositHistory");
 
  const {data,error}=await supabaseClient.from("deposit_requests")
   .select("id,amount,transfer_content,status,created_at")
-  .eq("user_id",currentUser.id)
-  .order("created_at",{ascending:false});
+  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
 
- if(error){
-  box.textContent="Không tải được lịch sử: "+error.message;
-  return;
- }
- if(!data.length){
-  box.textContent="Bạn chưa có yêu cầu nạp tiền.";
-  return;
- }
+ if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
+ if(!data.length){box.textContent="Bạn chưa có yêu cầu nạp tiền.";return;}
 
  box.innerHTML="";
  data.forEach(item=>{
@@ -522,22 +515,15 @@ async function loadDepositHistory(){
 }
 
 async function loadWalletHistory(){
- if(!currentUser || isAdminLoggedIn)return;
+ if(!currentUser||isAdminLoggedIn)return;
  const box=document.getElementById("walletHistory");
 
  const {data,error}=await supabaseClient.from("wallet_transactions")
   .select("amount,transaction_type,description,created_at")
-  .eq("user_id",currentUser.id)
-  .order("created_at",{ascending:false});
+  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
 
- if(error){
-  box.textContent="Không tải được lịch sử: "+error.message;
-  return;
- }
- if(!data.length){
-  box.textContent="Chưa có giao dịch.";
-  return;
- }
+ if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có giao dịch.";return;}
 
  box.innerHTML="";
  data.forEach(item=>{
@@ -550,12 +536,12 @@ async function loadWalletHistory(){
 }
 
 async function buyProduct(productId){
- if(!currentUser || isAdminLoggedIn){
+ if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
   return;
  }
 
- if(typeof productId!=="string" ||
+ if(typeof productId!=="string"||
  !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId)){
   alert("Mã sản phẩm không hợp lệ. Vui lòng tải lại trang.");
   return;
@@ -564,22 +550,14 @@ async function buyProduct(productId){
  if(!confirm("Bạn có chắc chắn muốn mua tài khoản này bằng số dư ví không?"))return;
 
  showStatus("Đang xử lý đơn hàng...");
-
- const {data,error}=await supabaseClient.rpc("purchase_product",{
-  p_product_id:productId
- });
+ const {data,error}=await supabaseClient.rpc("purchase_product",{p_product_id:productId});
 
  if(error){
   showStatus("Mua hàng thất bại: "+error.message);
   alert("Không mua được tài khoản: "+error.message);
   return;
  }
-
- if(data&&data.error){
-  showStatus(data.error);
-  alert(data.error);
-  return;
- }
+ if(data&&data.error){showStatus(data.error);alert(data.error);return;}
 
  await loadWallet();
  await loadWalletHistory();
@@ -589,11 +567,8 @@ async function buyProduct(productId){
  const login=data?.account_login||data?.login||"";
  const password=data?.account_password||data?.password||"";
 
- if(login||password){
-  showPurchaseResult(login,password);
- }else{
-  alert("Mua hàng thành công! Hãy xem tài khoản và mật khẩu trong lịch sử mua hàng.");
- }
+ if(login||password)showPurchaseResult(login,password);
+ else alert("Mua hàng thành công! Hãy xem tài khoản và mật khẩu trong lịch sử mua hàng.");
 
  showStatus("Mua tài khoản thành công!");
 }
@@ -619,23 +594,16 @@ function showPurchaseResult(login,password){
 }
 
 async function loadPurchaseHistory(){
- if(!currentUser || isAdminLoggedIn)return;
+ if(!currentUser||isAdminLoggedIn)return;
  const box=document.getElementById("purchaseHistory");
  box.textContent="Đang tải lịch sử mua hàng...";
 
  const {data,error}=await supabaseClient.from("orders")
   .select("id,product_id,amount,status,created_at,account_login,account_password")
-  .eq("user_id",currentUser.id)
-  .order("created_at",{ascending:false});
+  .eq("user_id",currentUser.id).order("created_at",{ascending:false});
 
- if(error){
-  box.textContent="Không tải được lịch sử mua: "+error.message;
-  return;
- }
- if(!data.length){
-  box.textContent="Bạn chưa mua tài khoản nào.";
-  return;
- }
+ if(error){box.textContent="Không tải được lịch sử mua: "+error.message;return;}
+ if(!data.length){box.textContent="Bạn chưa mua tài khoản nào.";return;}
 
  box.innerHTML="";
  data.forEach(item=>{
@@ -686,18 +654,12 @@ async function adminLogin(){
  const password=document.getElementById("adminPassword").value;
  const msg=document.getElementById("adminMessage");
 
- if(!email||!password){
-  msg.textContent="Nhập email và mật khẩu.";
-  return;
- }
+ if(!email||!password){msg.textContent="Nhập email và mật khẩu.";return;}
 
  msg.textContent="Đang đăng nhập...";
  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
- if(error){
-  msg.textContent="Đăng nhập lỗi: "+error.message;
-  return;
- }
+ if(error){msg.textContent="Đăng nhập lỗi: "+error.message;return;}
 
  const {data:isAdmin,error:roleError}=await supabaseClient.rpc("is_admin");
 
@@ -756,10 +718,7 @@ document.getElementById("productImage").addEventListener("change",function(){
 });
 
 async function adminAddProduct(){
- if(!currentUser||!isAdminLoggedIn){
-  alert("Vui lòng đăng nhập Admin.");
-  return;
- }
+ if(!currentUser||!isAdminLoggedIn){alert("Vui lòng đăng nhập Admin.");return;}
 
  const title=document.getElementById("productTitle").value.trim();
  const description=document.getElementById("productDescription").value.trim();
@@ -769,10 +728,7 @@ async function adminAddProduct(){
  const status=document.getElementById("addProductStatus");
  const button=document.getElementById("addProductButton");
 
- if(!selectedImage){
-  alert("Bạn chưa chọn ảnh sản phẩm.");
-  return;
- }
+ if(!selectedImage){alert("Bạn chưa chọn ảnh sản phẩm.");return;}
  if(!title||!Number.isSafeInteger(price)||price<=0||!accountLogin||!accountPassword){
   alert("Vui lòng nhập đầy đủ tên, giá, tài khoản và mật khẩu game.");
   return;
@@ -787,19 +743,13 @@ async function adminAddProduct(){
   const filePath=currentUser.id+"/"+Date.now()+"_"+safeName;
 
   const {data:uploadData,error:uploadError}=await supabaseClient.storage
-   .from(IMAGE_BUCKET)
-   .upload(filePath,selectedImage,{
-    cacheControl:"3600",
-    upsert:false,
-    contentType:selectedImage.type
+   .from(IMAGE_BUCKET).upload(filePath,selectedImage,{
+    cacheControl:"3600",upsert:false,contentType:selectedImage.type
    });
 
   if(uploadError)throw new Error("Lỗi tải ảnh: "+uploadError.message);
 
-  const {data:urlData}=supabaseClient.storage
-   .from(IMAGE_BUCKET)
-   .getPublicUrl(uploadData.path);
-
+  const {data:urlData}=supabaseClient.storage.from(IMAGE_BUCKET).getPublicUrl(uploadData.path);
   const imageUrl=urlData.publicUrl;
 
   button.textContent="ĐANG LƯU SẢN PHẨM...";
@@ -850,14 +800,8 @@ async function loadAdminDeposits(){
   .select("id,user_id,amount,transfer_content,status,created_at")
   .order("created_at",{ascending:false});
 
- if(error){
-  box.textContent="Lỗi tải danh sách: "+error.message;
-  return;
- }
- if(!data.length){
-  box.textContent="Chưa có yêu cầu nạp tiền.";
-  return;
- }
+ if(error){box.textContent="Lỗi tải danh sách: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có yêu cầu nạp tiền.";return;}
 
  box.innerHTML="";
  data.forEach(item=>{
@@ -896,9 +840,7 @@ async function approveDeposit(id,button){
  button.disabled=true;
  button.textContent="Đang xử lý...";
 
- const {data,error}=await supabaseClient.rpc("admin_approve_deposit",{
-  p_deposit_id:id
- });
+ const {data,error}=await supabaseClient.rpc("admin_approve_deposit",{p_deposit_id:id});
 
  if(error){
   alert("Không xác nhận được: "+error.message);
@@ -915,17 +857,10 @@ async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
  const {data,error}=await supabaseClient.from("products")
-  .select("id,title,price,image_url,is_available")
-  .order("id");
+  .select("id,title,price,image_url,is_available").order("id");
 
- if(error){
-  box.textContent="Không tải được sản phẩm: "+error.message;
-  return;
- }
- if(!data.length){
-  box.textContent="Chưa có sản phẩm trong bảng products.";
-  return;
- }
+ if(error){box.textContent="Không tải được sản phẩm: "+error.message;return;}
+ if(!data.length){box.textContent="Chưa có sản phẩm trong bảng products.";return;}
 
  box.innerHTML="";
  data.forEach(p=>{
@@ -962,15 +897,12 @@ async function adminLogout(){
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
-  .eq("is_available",true)
-  .order("id");
+  .eq("is_available",true).order("id");
 
- if(error){
-  console.log("Lỗi tải sản phẩm:",error.message);
-  return;
- }
+ if(error){console.log("Lỗi tải sản phẩm:",error.message);return;}
 
  const box=document.getElementById("products");
+
  if(!data||!data.length){
   box.innerHTML="<p>Hiện chưa có tài khoản nào đang bán.</p>";
   return;
@@ -1004,7 +936,6 @@ async function loadProducts(){
  });
 }
 
-/* LỊCH SỬ VÒNG QUAY TỪ SUPABASE */
 async function loadWheelHistory(){
  const box=document.getElementById("wheelHistory");
 
@@ -1018,18 +949,10 @@ async function loadWheelHistory(){
  const {data,error}=await supabaseClient.from("lucky_wheel_history")
   .select("prize,reward,created_at")
   .eq("user_id",currentUser.id)
-  .order("created_at",{ascending:false})
-  .limit(30);
+  .order("created_at",{ascending:false}).limit(30);
 
- if(error){
-  box.textContent="Không tải được lịch sử: "+error.message;
-  return;
- }
-
- if(!data||!data.length){
-  box.textContent="Bạn chưa quay lần nào.";
-  return;
- }
+ if(error){box.textContent="Không tải được lịch sử: "+error.message;return;}
+ if(!data||!data.length){box.textContent="Bạn chưa quay lần nào.";return;}
 
  box.innerHTML="";
  data.forEach(item=>{
@@ -1059,7 +982,6 @@ async function loadWheelHistory(){
 
  if(data.session){
   currentUser=data.session.user;
-
   const {data:isAdmin}=await supabaseClient.rpc("is_admin");
 
   if(isAdmin===true){
@@ -1083,7 +1005,6 @@ async function loadWheelHistory(){
 
  const ctx=canvas.getContext("2d");
 
- /* Các ô phải khớp chính xác với phần thưởng trong SQL */
  const prizes=[
   "MAY MẮN LẦN SAU",
   "5.000đ",
@@ -1094,10 +1015,7 @@ async function loadWheelHistory(){
   "100.000đ"
  ];
 
- const colors=[
-  "#d32f2f","#ff9800","#fbc02d","#388e3c",
-  "#0097a7","#3949ab","#8e24aa"
- ];
+ const colors=["#d32f2f","#ff9800","#fbc02d","#388e3c","#0097a7","#3949ab","#8e24aa"];
 
  let angle=0;
  let busy=false;
@@ -1154,18 +1072,14 @@ async function loadWheelHistory(){
   const btn=document.getElementById("wheelSpin");
   const status=document.getElementById("wheelStatus");
 
-  if(!confirm("Mỗi lượt quay sẽ trừ 20.000đ. Bạn có muốn tiếp tục?")){
-   return;
-  }
+  if(!confirm("Mỗi lượt quay sẽ trừ 20.000đ. Bạn có muốn tiếp tục?"))return;
 
   btn.disabled=true;
   busy=true;
   status.textContent="Đang xử lý lượt quay...";
 
   try{
-   /* Dùng supabaseClient trực tiếp, không dùng window.supabaseClient */
    const {data,error}=await supabaseClient.rpc("spin_lucky_wheel");
-
    if(error)throw error;
 
    const result=Array.isArray(data)?data[0]:data;
@@ -1212,9 +1126,7 @@ async function loadWheelHistory(){
      loadWalletHistory();
      loadWheelHistory();
 
-     if(Number(result.reward)>0){
-      fireworks();
-     }
+     if(Number(result.reward)>0)fireworks();
     }
    }
 
@@ -1231,10 +1143,8 @@ async function loadWheelHistory(){
  function fireworks(){
   const section=document.getElementById("wheelSection");
   const fx=document.createElement("div");
-
   fx.textContent="🎆 ✨ 🎉 ✨ 🎆";
   fx.style.cssText="font-size:32px;padding:15px;animation:wheelPop 1s ease";
-
   section.appendChild(fx);
   setTimeout(()=>fx.remove(),1500);
  }
@@ -1243,7 +1153,62 @@ async function loadWheelHistory(){
  style.textContent="@keyframes wheelPop{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}";
  document.head.appendChild(style);
 })();
-</script>
 
+/* NHẠC YOUTUBE: CARTOON - ON & ON */
+let musicPlayer=null;
+let musicReady=false;
+let musicPlaying=false;
+
+/* Tạo trình phát trước khi tải YouTube API */
+window.onYouTubeIframeAPIReady=function(){
+ musicPlayer=new YT.Player("youtubePlayer",{
+  height:"200",
+  width:"200",
+  videoId:"K4DyBUG242c",
+  playerVars:{
+   autoplay:0,
+   controls:1,
+   loop:1,
+   playlist:"K4DyBUG242c",
+   rel:0
+  },
+  events:{
+   onReady:function(){
+    musicReady=true;
+    document.getElementById("musicButton").textContent="▶ BẬT NHẠC";
+   },
+   onStateChange:function(event){
+    if(event.data===YT.PlayerState.PLAYING){
+     musicPlaying=true;
+     document.getElementById("musicButton").textContent="⏸ TẠM DỪNG NHẠC";
+    }
+    if(event.data===YT.PlayerState.PAUSED||event.data===YT.PlayerState.ENDED){
+     musicPlaying=false;
+     document.getElementById("musicButton").textContent="▶ BẬT NHẠC";
+    }
+   }
+  }
+ });
+};
+
+function toggleMusic(){
+ if(!musicReady){
+  alert("Nhạc đang tải. Bạn đợi vài giây rồi nhấn lại nhé.");
+  return;
+ }
+
+ if(musicPlaying){
+  musicPlayer.pauseVideo();
+ }else{
+  musicPlayer.playVideo();
+ }
+}
+
+/* Tải YouTube Player API */
+const youtubeScript=document.createElement("script");
+youtubeScript.src="https://www.youtube.com/iframe_api";
+document.head.appendChild(youtubeScript);
+
+</script>
 </body>
 </html>
