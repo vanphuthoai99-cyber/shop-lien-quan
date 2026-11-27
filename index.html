@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -42,10 +41,10 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 .admin-form h3{color:#ffd166}
 .product-admin-image{width:75px;height:65px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:10px}
 @media(max-width:600px){
- .container{padding:12px}
- nav a{display:inline-block;margin:6px}
- #adminLoginBtn{font-size:12px;padding:9px}
- .card img{height:180px}
+.container{padding:12px}
+nav a{display:inline-block;margin:6px}
+#adminLoginBtn{font-size:12px;padding:9px}
+.card img{height:180px}
 }
 </style>
 </head>
@@ -120,7 +119,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 </div>
 
 <div id="customerInfo" class="hidden">
-
 <div class="panel">
 <h3>Xin chào!</h3>
 <p id="customerEmailText"></p>
@@ -142,7 +140,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <option value="1000000">1.000.000đ</option>
 </select>
 <button onclick="createDeposit()">TẠO MÃ NẠP TIỀN</button>
-
 <div id="depositArea" class="hidden">
 <p class="yellow">Quét QR để chuyển khoản đúng số tiền và nội dung bên dưới.</p>
 <img id="qrImage" alt="QR Vietcombank">
@@ -168,7 +165,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <h3>LỊCH SỬ MUA TÀI KHOẢN</h3>
 <div id="purchaseHistory">Đang tải...</div>
 </div>
-
 </div>
 <p id="customerStatus"></p>
 </div>
@@ -179,7 +175,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <div class="panel">
 <h3>THÊM TÀI KHOẢN LIÊN QUÂN</h3>
 <p class="small">Chọn ảnh trong thư viện iPhone, nhập thông tin và đăng bán.</p>
-
 <div class="admin-form">
 <label>Ảnh tài khoản</label>
 <input id="productImage" type="file" accept="image/*">
@@ -273,7 +268,6 @@ function needLogin(productId){
  }
 }
 
-/* ĐĂNG KÝ KHÁCH HÀNG */
 async function customerRegister(){
  const email=document.getElementById("customerEmail").value.trim();
  const phone=document.getElementById("customerPhone").value.trim();
@@ -291,9 +285,7 @@ async function customerRegister(){
  showStatus("Đang đăng ký...");
 
  const {data,error}=await supabaseClient.auth.signUp({
-  email,
-  password,
-  options:{data:{phone}}
+  email,password,options:{data:{phone}}
  });
 
  if(error){
@@ -309,7 +301,6 @@ async function customerRegister(){
  }
 }
 
-/* ĐĂNG NHẬP KHÁCH HÀNG */
 async function customerLogin(){
  const email=document.getElementById("customerEmail").value.trim();
  const password=document.getElementById("customerPassword").value;
@@ -321,9 +312,7 @@ async function customerLogin(){
 
  showStatus("Đang đăng nhập...");
 
- const {data,error}=await supabaseClient.auth.signInWithPassword({
-  email,password
- });
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
  if(error){
   showStatus("Đăng nhập lỗi: "+error.message);
@@ -334,7 +323,6 @@ async function customerLogin(){
  showStatus("Đăng nhập thành công!");
 }
 
-/* HIỂN THỊ TÀI KHOẢN KHÁCH */
 async function showCustomer(user){
  currentUser=user;
  isAdminLoggedIn=false;
@@ -352,7 +340,6 @@ async function showCustomer(user){
  await loadPurchaseHistory();
 }
 
-/* ĐĂNG XUẤT KHÁCH */
 async function customerLogout(){
  await supabaseClient.auth.signOut();
  currentUser=null;
@@ -365,7 +352,6 @@ async function customerLogout(){
  showStatus("Đã đăng xuất.");
 }
 
-/* TẢI SỐ DƯ */
 async function loadWallet(){
  if(!currentUser)return;
 
@@ -382,7 +368,6 @@ async function loadWallet(){
  document.getElementById("walletBalance").textContent=money(data?data.balance:0);
 }
 
-/* TẠO YÊU CẦU NẠP TIỀN */
 async function createDeposit(){
  if(!currentUser){
   alert("Vui lòng đăng nhập.");
@@ -396,10 +381,7 @@ async function createDeposit(){
  showStatus("Đang tạo yêu cầu nạp tiền...");
 
  const {error}=await supabaseClient.from("deposit_requests").insert({
-  user_id:currentUser.id,
-  amount:amount,
-  transfer_content:content,
-  status:"pending"
+  user_id:currentUser.id,amount,transfer_content:content,status:"pending"
  });
 
  if(error){
@@ -423,10 +405,8 @@ async function createDeposit(){
  await loadDepositHistory();
 }
 
-/* SAO CHÉP NỘI DUNG CHUYỂN KHOẢN */
 async function copyTransferContent(){
  if(!currentDepositContent)return;
-
  try{
   await navigator.clipboard.writeText(currentDepositContent);
   alert("Đã sao chép nội dung chuyển khoản.");
@@ -435,10 +415,8 @@ async function copyTransferContent(){
  }
 }
 
-/* LỊCH SỬ NẠP TIỀN */
 async function loadDepositHistory(){
  if(!currentUser)return;
-
  const box=document.getElementById("depositHistory");
 
  const {data,error}=await supabaseClient.from("deposit_requests")
@@ -450,37 +428,29 @@ async function loadDepositHistory(){
   box.textContent="Không tải được lịch sử: "+error.message;
   return;
  }
-
  if(!data.length){
   box.textContent="Bạn chưa có yêu cầu nạp tiền.";
   return;
  }
 
  box.innerHTML="";
-
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
-
   const b=document.createElement("b");
   b.textContent=money(item.amount);
-
   const p=document.createElement("p");
   p.textContent="Nội dung: "+item.transfer_content;
-
   const s=document.createElement("p");
   s.textContent="Trạng thái: "+statusText(item.status);
   s.className=item.status==="approved"?"green":"yellow";
-
   div.append(b,p,s);
   box.appendChild(div);
  });
 }
 
-/* LỊCH SỬ GIAO DỊCH VÍ */
 async function loadWalletHistory(){
  if(!currentUser)return;
-
  const box=document.getElementById("walletHistory");
 
  const {data,error}=await supabaseClient.from("wallet_transactions")
@@ -492,29 +462,31 @@ async function loadWalletHistory(){
   box.textContent="Không tải được lịch sử: "+error.message;
   return;
  }
-
  if(!data.length){
   box.textContent="Chưa có giao dịch.";
   return;
  }
 
  box.innerHTML="";
-
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
-
   div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Mua hàng -")
    +money(item.amount)+" | "+(item.description||"");
-
   box.appendChild(div);
  });
 }
 
-/* MUA TÀI KHOẢN BẰNG SỐ DƯ */
+/* ĐÃ SỬA: UUID ĐƯỢC GỬI NGUYÊN DẠNG, KHÔNG CHUYỂN SANG NUMBER */
 async function buyProduct(productId){
  if(!currentUser){
   alert("Vui lòng đăng nhập trước khi mua.");
+  return;
+ }
+
+ if(typeof productId!=="string" ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId)){
+  alert("Mã sản phẩm không hợp lệ. Vui lòng tải lại trang.");
   return;
  }
 
@@ -524,7 +496,7 @@ async function buyProduct(productId){
  showStatus("Đang xử lý đơn hàng...");
 
  const {data,error}=await supabaseClient.rpc("purchase_product",{
-  p_product_id:Number(productId)
+  p_product_id:productId
  });
 
  if(error){
@@ -533,7 +505,7 @@ async function buyProduct(productId){
   return;
  }
 
- if(data && data.error){
+ if(data&&data.error){
   showStatus(data.error);
   alert(data.error);
   return;
@@ -542,14 +514,10 @@ async function buyProduct(productId){
  await loadWallet();
  await loadWalletHistory();
  await loadPurchaseHistory();
+ await loadProducts();
 
- let login="";
- let password="";
-
- if(data){
-  login=data.account_login||data.login||"";
-  password=data.account_password||data.password||"";
- }
+ const login=data?.account_login||data?.login||"";
+ const password=data?.account_password||data?.password||"";
 
  if(login||password){
   showPurchaseResult(login,password);
@@ -560,10 +528,8 @@ async function buyProduct(productId){
  showStatus("Mua tài khoản thành công!");
 }
 
-/* HIỂN THỊ TÀI KHOẢN VỪA MUA */
 function showPurchaseResult(login,password){
  const box=document.getElementById("purchaseHistory");
-
  const result=document.createElement("div");
  result.className="account-result";
 
@@ -579,14 +545,11 @@ function showPurchaseResult(login,password){
 
  result.append(title,loginText,passText);
  box.prepend(result);
-
  alert("Mua thành công! Thông tin tài khoản đã hiển thị trong lịch sử mua hàng.");
 }
 
-/* LỊCH SỬ MUA HÀNG */
 async function loadPurchaseHistory(){
  if(!currentUser)return;
-
  const box=document.getElementById("purchaseHistory");
  box.textContent="Đang tải lịch sử mua hàng...";
 
@@ -599,14 +562,12 @@ async function loadPurchaseHistory(){
   box.textContent="Không tải được lịch sử mua: "+error.message;
   return;
  }
-
  if(!data.length){
   box.textContent="Bạn chưa mua tài khoản nào.";
   return;
  }
 
  box.innerHTML="";
-
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
@@ -640,7 +601,6 @@ async function loadPurchaseHistory(){
  });
 }
 
-/* ĐĂNG NHẬP ADMIN */
 document.getElementById("adminLoginBtn").onclick=()=>{
  document.getElementById("adminLoginBox").style.display="block";
 };
@@ -662,10 +622,7 @@ async function adminLogin(){
  }
 
  msg.textContent="Đang đăng nhập...";
-
- const {data,error}=await supabaseClient.auth.signInWithPassword({
-  email,password
- });
+ const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
  if(error){
   msg.textContent="Đăng nhập lỗi: "+error.message;
@@ -693,7 +650,6 @@ async function adminLogin(){
  await loadAdminProducts();
 }
 
-/* XEM TRƯỚC ẢNH TỪ IPHONE */
 document.getElementById("productImage").addEventListener("change",function(){
  const file=this.files[0];
  const preview=document.getElementById("imagePreview");
@@ -728,7 +684,6 @@ document.getElementById("productImage").addEventListener("change",function(){
  status.textContent="Đã chọn: "+file.name;
 });
 
-/* ADMIN TẢI ẢNH VÀ ĐĂNG SẢN PHẨM */
 async function adminAddProduct(){
  if(!currentUser||!isAdminLoggedIn){
   alert("Vui lòng đăng nhập Admin.");
@@ -768,9 +723,7 @@ async function adminAddProduct(){
     contentType:selectedImage.type
    });
 
-  if(uploadError){
-   throw new Error("Lỗi tải ảnh: "+uploadError.message);
-  }
+  if(uploadError)throw new Error("Lỗi tải ảnh: "+uploadError.message);
 
   const {data:urlData}=supabaseClient.storage
    .from(IMAGE_BUCKET)
@@ -794,9 +747,7 @@ async function adminAddProduct(){
    throw new Error("Ảnh đã tải lên nhưng lưu sản phẩm thất bại: "+error.message);
   }
 
-  if(data&&data.error){
-   throw new Error(data.error);
-  }
+  if(data&&data.error)throw new Error(data.error);
 
   alert("ĐĂNG BÁN SẢN PHẨM THÀNH CÔNG!");
 
@@ -823,7 +774,6 @@ async function adminAddProduct(){
  }
 }
 
-/* ADMIN XEM YÊU CẦU NẠP TIỀN */
 async function loadAdminDeposits(){
  const box=document.getElementById("adminDeposits");
  box.textContent="Đang tải...";
@@ -836,14 +786,12 @@ async function loadAdminDeposits(){
   box.textContent="Lỗi tải danh sách: "+error.message;
   return;
  }
-
  if(!data.length){
   box.textContent="Chưa có yêu cầu nạp tiền.";
   return;
  }
 
  box.innerHTML="";
-
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
@@ -869,12 +817,10 @@ async function loadAdminDeposits(){
    btn.onclick=()=>approveDeposit(item.id,btn);
    div.appendChild(btn);
   }
-
   box.appendChild(div);
  });
 }
 
-/* ADMIN DUYỆT NẠP TIỀN */
 async function approveDeposit(id,button){
  const ok=confirm("Bạn đã kiểm tra Vietcombank và chắc chắn đã nhận đúng số tiền của yêu cầu này chưa?");
  if(!ok)return;
@@ -897,7 +843,6 @@ async function approveDeposit(id,button){
  await loadAdminDeposits();
 }
 
-/* ADMIN XEM SẢN PHẨM */
 async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
@@ -909,14 +854,12 @@ async function loadAdminProducts(){
   box.textContent="Không tải được sản phẩm: "+error.message;
   return;
  }
-
  if(!data.length){
   box.textContent="Chưa có sản phẩm trong bảng products.";
   return;
  }
 
  box.innerHTML="";
-
  data.forEach(p=>{
   const div=document.createElement("div");
   div.className="item";
@@ -932,15 +875,12 @@ async function loadAdminProducts(){
   const text=document.createElement("span");
   text.textContent=p.title+" - "+money(p.price)+" - "+(p.is_available?"Đang bán":"Đã ẩn");
   div.appendChild(text);
-
   box.appendChild(div);
  });
 }
 
-/* ADMIN ĐĂNG XUẤT */
 async function adminLogout(){
  await supabaseClient.auth.signOut();
-
  currentUser=null;
  isAdminLoggedIn=false;
 
@@ -951,7 +891,6 @@ async function adminLogout(){
  alert("Đã đăng xuất Admin.");
 }
 
-/* TẢI SẢN PHẨM TỪ SUPABASE */
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
@@ -995,7 +934,6 @@ async function loadProducts(){
  });
 }
 
-/* KHỞI ĐỘNG WEBSITE */
 (async function init(){
  await loadProducts();
 
