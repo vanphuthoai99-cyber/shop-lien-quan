@@ -1572,5 +1572,90 @@ youtubeScript.onerror=function(){
 };
 document.head.appendChild(youtubeScript);
 </script>
+<!-- HIỆU ỨNG TUYẾT RƠI SHOP LIÊN QUÂN -->
+<style>
+#snow-effect {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 99999;
+}
+</style>
+
+<canvas id="snow-effect"></canvas>
+
+<script>
+(function () {
+    const canvas = document.getElementById("snow-effect");
+    const ctx = canvas.getContext("2d");
+
+    let width, height;
+    let snowflakes = [];
+
+    function resizeSnow() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+
+        snowflakes = [];
+
+        const amount = Math.min(
+            120,
+            Math.max(45, Math.floor(width / 7))
+        );
+
+        for (let i = 0; i < amount; i++) {
+            snowflakes.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 3 + 1,
+                speed: Math.random() * 1.5 + 0.5,
+                wind: Math.random() * 0.8 - 0.4,
+                opacity: Math.random() * 0.6 + 0.3
+            });
+        }
+    }
+
+    function drawSnow() {
+        ctx.clearRect(0, 0, width, height);
+
+        snowflakes.forEach(snow => {
+            ctx.beginPath();
+            ctx.arc(
+                snow.x,
+                snow.y,
+                snow.radius,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fillStyle = `rgba(255,255,255,${snow.opacity})`;
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = "#ffffff";
+            ctx.fill();
+
+            snow.y += snow.speed;
+            snow.x += snow.wind;
+
+            if (snow.y > height + 5) {
+                snow.y = -5;
+                snow.x = Math.random() * width;
+            }
+
+            if (snow.x > width + 5) snow.x = 0;
+            if (snow.x < -5) snow.x = width;
+        });
+
+        requestAnimationFrame(drawSnow);
+    }
+
+    window.addEventListener("resize", resizeSnow);
+
+    resizeSnow();
+    drawSnow();
+})();
+</script>
+<!-- KẾT THÚC HIỆU ỨNG TUYẾT RƠI -->
 </body>
 </html>
