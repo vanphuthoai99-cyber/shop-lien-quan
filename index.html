@@ -41,6 +41,13 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 .admin-form{border:1px solid #555;padding:15px;border-radius:10px;margin-top:15px}
 .admin-form h3{color:#ffd166}
 .product-admin-image{width:75px;height:65px;object-fit:cover;border-radius:6px;vertical-align:middle;margin-right:10px}
+#wheelSection{background:#19131c;border:2px solid #e53935;border-radius:15px;padding:18px;margin:20px auto;text-align:center;max-width:550px}
+#wheelSection h2{color:#ffd54f}
+#wheelCanvas{width:100%;max-width:360px;display:block;margin:15px auto}
+#wheelPointer{font-size:30px;color:#ffeb3b;margin-bottom:-20px;position:relative;z-index:2}
+#wheelSpin{background:linear-gradient(45deg,#e53935,#ff9800);color:white;border:0;padding:14px 30px;border-radius:30px;font-size:18px;font-weight:bold;cursor:pointer}
+#wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
+#wheelHistory{font-size:14px;text-align:left;max-height:220px;overflow:auto}
 @media(max-width:600px){
 .container{padding:12px}
 nav a{display:inline-block;margin:6px}
@@ -71,6 +78,7 @@ nav a{display:inline-block;margin:6px}
 <a href="#">Trang chủ</a>
 <a href="#accounts">Danh sách acc</a>
 <a href="#customerBox">Tài khoản của tôi</a>
+<a href="#wheelSection">Vòng quay</a>
 <a href="#contact">Liên hệ</a>
 </nav>
 
@@ -88,20 +96,6 @@ nav a{display:inline-block;margin:6px}
 <h3>Acc Liên Quân #001</h3>
 <p>Trang phục đẹp - Nhiều tướng</p>
 <p class="price">200.000đ</p>
-<button onclick="needLogin()">Mua tài khoản</button>
-</div>
-<div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+02">
-<h3>Acc Liên Quân #002</h3>
-<p>Nhiều trang phục - Rank cao</p>
-<p class="price">350.000đ</p>
-<button onclick="needLogin()">Mua tài khoản</button>
-</div>
-<div class="card">
-<img src="https://placehold.co/600x350/24242c/ffffff?text=ACCOUNT+03">
-<h3>Acc Liên Quân #003</h3>
-<p>Nhiều tướng - Giá tốt</p>
-<p class="price">500.000đ</p>
 <button onclick="needLogin()">Mua tài khoản</button>
 </div>
 </div>
@@ -173,7 +167,6 @@ nav a{display:inline-block;margin:6px}
 <div class="container hidden" id="adminPanel">
 <h2>QUẢN TRỊ ADMIN</h2>
 
-<!-- CHỨC NĂNG ADMIN TỰ CỘNG SỐ DƯ -->
 <div class="panel">
 <h3 style="color:#ffd166">CỘNG SỐ DƯ ADMIN</h3>
 <p>Số dư ví Admin hiện tại:</p>
@@ -228,6 +221,17 @@ nav a{display:inline-block;margin:6px}
 </div>
 
 <button onclick="adminLogout()">ĐĂNG XUẤT ADMIN</button>
+</div>
+
+<div id="wheelSection">
+<h2>🎡 VÒNG QUAY MAY MẮN</h2>
+<p>Giá mỗi lượt: <b style="color:#ffca28">20.000đ</b></p>
+<div id="wheelPointer">▼</div>
+<canvas id="wheelCanvas" width="500" height="500"></canvas>
+<button id="wheelSpin" onclick="spinLuckyWheel()">QUAY NGAY</button>
+<div id="wheelStatus">Chúc bạn may mắn!</div>
+<h3>LỊCH SỬ QUAY</h3>
+<div id="wheelHistory">Đăng nhập để xem lịch sử</div>
 </div>
 
 <footer id="contact">
@@ -350,6 +354,7 @@ async function showCustomer(user){
  await loadDepositHistory();
  await loadWalletHistory();
  await loadPurchaseHistory();
+ await loadWheelHistory();
 }
 
 async function customerLogout(){
@@ -360,6 +365,7 @@ async function customerLogout(){
  document.getElementById("customerForms").classList.remove("hidden");
  document.getElementById("customerInfo").classList.add("hidden");
  document.getElementById("adminPanel").classList.add("hidden");
+ document.getElementById("wheelHistory").textContent="Đăng nhập để xem lịch sử";
 
  showStatus("Đã đăng xuất.");
 }
@@ -380,7 +386,6 @@ async function loadWallet(){
  document.getElementById("walletBalance").textContent=money(data?data.balance:0);
 }
 
-/* ADMIN TỰ XEM SỐ DƯ */
 async function loadAdminWalletBalance(){
  const display=document.getElementById("adminWalletBalance");
 
@@ -402,7 +407,6 @@ async function loadAdminWalletBalance(){
  display.textContent=money(data?data.balance:0);
 }
 
-/* ADMIN TỰ CỘNG TIỀN */
 async function adminCreditWallet(){
  const amount=Number(document.getElementById("adminCreditAmount").value);
  const status=document.getElementById("adminCreditStatus");
@@ -433,11 +437,9 @@ async function adminCreditWallet(){
 
  document.getElementById("adminCreditAmount").value="";
  status.textContent="Đã cộng tiền thành công!";
-
  await loadAdminWalletBalance();
 }
 
-/* TẠO YÊU CẦU NẠP TIỀN */
 async function createDeposit(){
  if(!currentUser || isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng.");
@@ -541,7 +543,7 @@ async function loadWalletHistory(){
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
-  div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Mua hàng -")
+  div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Giao dịch ")
    +money(item.amount)+" | "+(item.description||"");
   box.appendChild(div);
  });
@@ -669,7 +671,6 @@ async function loadPurchaseHistory(){
  });
 }
 
-/* ĐĂNG NHẬP ADMIN */
 document.getElementById("adminLoginBtn").onclick=()=>{
  document.getElementById("adminLoginBox").style.display="block";
 };
@@ -713,14 +714,13 @@ async function adminLogin(){
  document.getElementById("adminLoginBox").style.display="none";
  document.getElementById("adminPanel").classList.remove("hidden");
  document.getElementById("customerInfo").classList.add("hidden");
- document.getElementById("customerForms").classList.remove("hidden");
+ document.getElementById("customerForms").classList.add("hidden");
 
  await loadAdminWalletBalance();
  await loadAdminDeposits();
  await loadAdminProducts();
 }
 
-/* XEM TRƯỚC ẢNH SẢN PHẨM */
 document.getElementById("productImage").addEventListener("change",function(){
  const file=this.files[0];
  const preview=document.getElementById("imagePreview");
@@ -755,7 +755,6 @@ document.getElementById("productImage").addEventListener("change",function(){
  status.textContent="Đã chọn: "+file.name;
 });
 
-/* ADMIN ĐĂNG SẢN PHẨM */
 async function adminAddProduct(){
  if(!currentUser||!isAdminLoggedIn){
   alert("Vui lòng đăng nhập Admin.");
@@ -774,7 +773,7 @@ async function adminAddProduct(){
   alert("Bạn chưa chọn ảnh sản phẩm.");
   return;
  }
- if(!title||!price||price<=0||!accountLogin||!accountPassword){
+ if(!title||!Number.isSafeInteger(price)||price<=0||!accountLogin||!accountPassword){
   alert("Vui lòng nhập đầy đủ tên, giá, tài khoản và mật khẩu game.");
   return;
  }
@@ -843,7 +842,6 @@ async function adminAddProduct(){
  }
 }
 
-/* ADMIN XEM YÊU CẦU NẠP */
 async function loadAdminDeposits(){
  const box=document.getElementById("adminDeposits");
  box.textContent="Đang tải...";
@@ -913,7 +911,6 @@ async function approveDeposit(id,button){
  await loadAdminDeposits();
 }
 
-/* ADMIN QUẢN LÝ SẢN PHẨM */
 async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
@@ -962,7 +959,6 @@ async function adminLogout(){
  alert("Đã đăng xuất Admin.");
 }
 
-/* TẢI SẢN PHẨM CHO KHÁCH */
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
@@ -1008,7 +1004,54 @@ async function loadProducts(){
  });
 }
 
-/* KIỂM TRA PHIÊN ĐĂNG NHẬP */
+/* LỊCH SỬ VÒNG QUAY TỪ SUPABASE */
+async function loadWheelHistory(){
+ const box=document.getElementById("wheelHistory");
+
+ if(!currentUser||isAdminLoggedIn){
+  box.textContent="Đăng nhập tài khoản khách hàng để xem lịch sử.";
+  return;
+ }
+
+ box.textContent="Đang tải lịch sử quay...";
+
+ const {data,error}=await supabaseClient.from("lucky_wheel_history")
+  .select("prize,reward,created_at")
+  .eq("user_id",currentUser.id)
+  .order("created_at",{ascending:false})
+  .limit(30);
+
+ if(error){
+  box.textContent="Không tải được lịch sử: "+error.message;
+  return;
+ }
+
+ if(!data||!data.length){
+  box.textContent="Bạn chưa quay lần nào.";
+  return;
+ }
+
+ box.innerHTML="";
+ data.forEach(item=>{
+  const div=document.createElement("div");
+  div.className="item";
+
+  const date=document.createElement("p");
+  date.className="small";
+  date.textContent=new Date(item.created_at).toLocaleString("vi-VN");
+
+  const prize=document.createElement("b");
+  prize.textContent="🎁 "+item.prize;
+
+  const reward=document.createElement("p");
+  reward.textContent="Tiền thưởng: "+money(item.reward);
+
+  div.append(date,prize,reward);
+  box.appendChild(div);
+ });
+}
+
+/* KHỞI ĐỘNG WEBSITE */
 (async function init(){
  await loadProducts();
 
@@ -1022,7 +1065,8 @@ async function loadProducts(){
   if(isAdmin===true){
    isAdminLoggedIn=true;
    document.getElementById("adminPanel").classList.remove("hidden");
-   document.getElementById("customerForms").classList.remove("hidden");
+   document.getElementById("customerForms").classList.add("hidden");
+   document.getElementById("customerInfo").classList.add("hidden");
    await loadAdminWalletBalance();
    await loadAdminDeposits();
    await loadAdminProducts();
@@ -1031,117 +1075,170 @@ async function loadProducts(){
   }
  }
 })();
-</script>
 
-<style>
-#wheelSection{background:#19131c;border:2px solid #e53935;border-radius:15px;padding:18px;margin:20px auto;text-align:center;max-width:550px}
-#wheelSection h2{color:#ffd54f}
-#wheelCanvas{width:100%;max-width:360px;display:block;margin:15px auto}
-#wheelPointer{font-size:30px;color:#ffeb3b;margin-bottom:-20px;position:relative;z-index:2}
-#wheelSpin{background:linear-gradient(45deg,#e53935,#ff9800);color:white;border:0;padding:14px 30px;border-radius:30px;font-size:18px;font-weight:bold;cursor:pointer}
-#wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
-#wheelHistory{font-size:14px;text-align:left;max-height:150px;overflow:auto}
-</style>
-
-<div id="wheelSection">
-  <h2>🎡 VÒNG QUAY MAY MẮN</h2>
-  <p>Giá mỗi lượt: <b style="color:#ffca28">20.000đ</b></p>
-  <div id="wheelPointer">▼</div>
-  <canvas id="wheelCanvas" width="500" height="500"></canvas>
-  <button id="wheelSpin" onclick="spinLuckyWheel()">QUAY NGAY</button>
-  <div id="wheelStatus">Chúc bạn may mắn!</div>
-  <h3>LỊCH SỬ QUAY</h3>
-  <div id="wheelHistory">Đăng nhập để xem lịch sử</div>
-</div>
-
-<script>
+/* VÒNG QUAY MAY MẮN */
 (function(){
  const canvas=document.getElementById("wheelCanvas");
  if(!canvas)return;
+
  const ctx=canvas.getContext("2d");
+
+ /* Các ô phải khớp chính xác với phần thưởng trong SQL */
  const prizes=[
-  "MAY MẮN LẦN SAU","5.000đ","10.000đ","20.000đ",
-  "30.000đ","50.000đ","100.000đ","20.000đ"
+  "MAY MẮN LẦN SAU",
+  "5.000đ",
+  "10.000đ",
+  "20.000đ",
+  "30.000đ",
+  "50.000đ",
+  "100.000đ"
  ];
- const colors=["#d32f2f","#ff9800","#fbc02d","#388e3c",
- "#0097a7","#3949ab","#8e24aa","#ec407a"];
- let angle=0,busy=false;
+
+ const colors=[
+  "#d32f2f","#ff9800","#fbc02d","#388e3c",
+  "#0097a7","#3949ab","#8e24aa"
+ ];
+
+ let angle=0;
+ let busy=false;
  const arc=Math.PI*2/prizes.length;
 
  function draw(){
   ctx.clearRect(0,0,500,500);
+
   prizes.forEach((p,i)=>{
    const a=angle+i*arc-Math.PI/2;
-   ctx.beginPath();ctx.moveTo(250,250);
+
+   ctx.beginPath();
+   ctx.moveTo(250,250);
    ctx.arc(250,250,235,a,a+arc);
-   ctx.closePath();ctx.fillStyle=colors[i];ctx.fill();
-   ctx.strokeStyle="white";ctx.lineWidth=3;ctx.stroke();
-   ctx.save();ctx.translate(250,250);
+   ctx.closePath();
+   ctx.fillStyle=colors[i];
+   ctx.fill();
+   ctx.strokeStyle="white";
+   ctx.lineWidth=3;
+   ctx.stroke();
+
+   ctx.save();
+   ctx.translate(250,250);
    ctx.rotate(a+arc/2);
-   ctx.fillStyle="white";ctx.font="bold 19px Arial";
-   ctx.textAlign="right";ctx.fillText(p,215,7);
+   ctx.fillStyle="white";
+   ctx.font="bold 18px Arial";
+   ctx.textAlign="right";
+   ctx.fillText(p,215,7);
    ctx.restore();
   });
-  ctx.beginPath();ctx.arc(250,250,40,0,Math.PI*2);
-  ctx.fillStyle="#fff";ctx.fill();
-  ctx.fillStyle="#b71c1c";ctx.font="bold 18px Arial";
-  ctx.textAlign="center";ctx.fillText("SHOP",250,256);
+
+  ctx.beginPath();
+  ctx.arc(250,250,40,0,Math.PI*2);
+  ctx.fillStyle="#fff";
+  ctx.fill();
+
+  ctx.fillStyle="#b71c1c";
+  ctx.font="bold 18px Arial";
+  ctx.textAlign="center";
+  ctx.fillText("SHOP",250,256);
  }
+
  draw();
 
  window.spinLuckyWheel=async function(){
   if(busy)return;
-  if(!window.supabaseClient){
-   alert("Không tìm thấy kết nối Supabase.");return;
+
+  if(!currentUser||isAdminLoggedIn){
+   alert("Vui lòng đăng nhập tài khoản khách hàng trước khi quay.");
+   document.getElementById("customerBox").scrollIntoView();
+   return;
   }
+
   const btn=document.getElementById("wheelSpin");
   const status=document.getElementById("wheelStatus");
-  btn.disabled=true;busy=true;
-  status.textContent="Đang quay...";
+
+  if(!confirm("Mỗi lượt quay sẽ trừ 20.000đ. Bạn có muốn tiếp tục?")){
+   return;
+  }
+
+  btn.disabled=true;
+  busy=true;
+  status.textContent="Đang xử lý lượt quay...";
+
   try{
-   const {data,error}=await window.supabaseClient.rpc("spin_lucky_wheel");
+   /* Dùng supabaseClient trực tiếp, không dùng window.supabaseClient */
+   const {data,error}=await supabaseClient.rpc("spin_lucky_wheel");
+
    if(error)throw error;
+
    const result=Array.isArray(data)?data[0]:data;
+
+   if(!result||!result.prize){
+    throw new Error("Không nhận được kết quả vòng quay.");
+   }
+
    const prize=result.prize;
    const index=prizes.indexOf(prize);
-   if(index<0)throw new Error("Phần thưởng không hợp lệ");
+
+   if(index<0){
+    throw new Error("Phần thưởng không khớp với vòng quay: "+prize);
+   }
+
    const target=2*Math.PI-(index+0.5)*arc;
    const current=((angle%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
    const delta=((target-current)%(2*Math.PI)+2*Math.PI)%(2*Math.PI);
+
    const start=angle;
    const end=start+Math.PI*10+delta;
    const begin=performance.now();
+
    function animate(now){
     const t=Math.min((now-begin)/5000,1);
     const ease=1-Math.pow(1-t,4);
-    angle=start+(end-start)*ease;draw();
-    if(t<1)requestAnimationFrame(animate);
-    else{
+
+    angle=start+(end-start)*ease;
+    draw();
+
+    if(t<1){
+     requestAnimationFrame(animate);
+    }else{
      status.textContent="🎉 Bạn trúng: "+prize;
-     if(result.reward>0)status.textContent+=" — Đã cộng "+Number(result.reward).toLocaleString("vi-VN")+"đ vào ví!";
-     document.getElementById("wheelHistory").innerHTML=
-      "<p>"+new Date().toLocaleString("vi-VN")+" — "+prize+"</p>"+
-      document.getElementById("wheelHistory").innerHTML;
-     btn.disabled=false;busy=false;
-     if(typeof loadWallet==="function")loadWallet();
-     if(result.reward>0)fireworks();
+
+     if(Number(result.reward)>0){
+      status.textContent+=" — Đã cộng "+money(result.reward)+" vào ví!";
+     }
+
+     btn.disabled=false;
+     busy=false;
+
+     loadWallet();
+     loadWalletHistory();
+     loadWheelHistory();
+
+     if(Number(result.reward)>0){
+      fireworks();
+     }
     }
    }
+
    requestAnimationFrame(animate);
+
   }catch(e){
-   status.textContent=e.message||"Có lỗi xảy ra";
-   btn.disabled=false;busy=false;
+   status.textContent=e.message||"Có lỗi xảy ra.";
+   btn.disabled=false;
+   busy=false;
+   alert("Không quay được: "+(e.message||"Có lỗi xảy ra."));
   }
  };
 
  function fireworks(){
   const section=document.getElementById("wheelSection");
   const fx=document.createElement("div");
+
   fx.textContent="🎆 ✨ 🎉 ✨ 🎆";
   fx.style.cssText="font-size:32px;padding:15px;animation:wheelPop 1s ease";
+
   section.appendChild(fx);
   setTimeout(()=>fx.remove(),1500);
  }
+
  const style=document.createElement("style");
  style.textContent="@keyframes wheelPop{0%{transform:scale(.3);opacity:0}50%{transform:scale(1.3)}100%{transform:scale(1);opacity:1}}";
  document.head.appendChild(style);
