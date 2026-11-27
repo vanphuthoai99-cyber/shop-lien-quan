@@ -50,21 +50,21 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 #wheelStatus{margin:15px;color:#ffd54f;font-weight:bold;min-height:25px}
 #wheelHistory{font-size:14px;text-align:left;max-height:220px;overflow:auto}
 
-/* TRÌNH PHÁT NHẠC ẨN */
+/* TRÌNH PHÁT YOUTUBE ẨN */
 #youtubePlayer{
  position:fixed;
- width:1px;
- height:1px;
- left:-100px;
- bottom:-100px;
+ width:200px;
+ height:200px;
+ left:-250px;
+ top:0;
  overflow:hidden;
- opacity:0.01;
+ opacity:0;
  pointer-events:none;
  z-index:-1;
 }
 #youtubePlayer iframe{
- width:1px!important;
- height:1px!important;
+ width:200px!important;
+ height:200px!important;
 }
 
 @media(max-width:600px){
@@ -261,7 +261,6 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <p>© 2026 - Website bán tài khoản game</p>
 </footer>
 
-<!-- TRÌNH PHÁT YOUTUBE ẨN -->
 <div id="youtubePlayer"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1150,12 +1149,14 @@ async function loadWheelHistory(){
 
 /* NHẠC NỀN YOUTUBE - VIDEO BẠN ĐÃ CHỌN */
 const MUSIC_VIDEO_ID="kDdv4rgBMRI";
+
 let musicPlayer=null;
 let musicReady=false;
+let userInteracted=false;
 let musicStarted=false;
 
 function startBackgroundMusic(){
- if(!musicReady||!musicPlayer)return;
+ if(!musicReady||!musicPlayer||!userInteracted||musicStarted)return;
 
  try{
   musicPlayer.unMute();
@@ -1163,62 +1164,62 @@ function startBackgroundMusic(){
   musicPlayer.playVideo();
   musicStarted=true;
  }catch(error){
-  console.log("Trình duyệt chưa cho phép phát nhạc:",error);
+  console.log("Lỗi phát nhạc:",error);
  }
 }
 
+/* Ghi nhận thao tác của khách, kể cả khi YouTube chưa tải xong */
+function unlockBackgroundMusic(){
+ userInteracted=true;
+ startBackgroundMusic();
+}
+
+document.addEventListener("touchstart",unlockBackgroundMusic,{passive:true});
+document.addEventListener("click",unlockBackgroundMusic);
+document.addEventListener("keydown",unlockBackgroundMusic);
+
+/* Khởi tạo trình phát YouTube */
 window.onYouTubeIframeAPIReady=function(){
  musicPlayer=new YT.Player("youtubePlayer",{
-  width:"1",
-  height:"1",
+  width:"200",
+  height:"200",
   videoId:MUSIC_VIDEO_ID,
   playerVars:{
-   autoplay:1,
+   autoplay:0,
    controls:0,
    disablekb:1,
    fs:0,
    playsinline:1,
    rel:0,
    loop:1,
-   playlist:MUSIC_VIDEO_ID,
-   mute:0
+   playlist:MUSIC_VIDEO_ID
   },
   events:{
    onReady:function(event){
     musicReady=true;
     event.target.setVolume(70);
-
-    /* Thử phát nhạc ngay khi trang tải */
     startBackgroundMusic();
    },
    onStateChange:function(event){
-    /* Nếu video kết thúc thì phát lại */
     if(event.data===YT.PlayerState.ENDED){
      musicPlayer.seekTo(0);
      musicPlayer.playVideo();
     }
    },
    onError:function(error){
-    console.log("Lỗi trình phát nhạc YouTube:",error.data);
+    musicStarted=false;
+    console.log("YouTube báo lỗi:",error.data);
    }
   }
  });
 };
 
-/* Nếu iPhone chặn tự phát, thử phát sau lần chạm đầu tiên */
-function unlockBackgroundMusic(){
- if(!musicStarted&&musicReady){
-  startBackgroundMusic();
- }
-}
-
-document.addEventListener("click",unlockBackgroundMusic,{once:true});
-document.addEventListener("touchstart",unlockBackgroundMusic,{once:true,passive:true});
-document.addEventListener("keydown",unlockBackgroundMusic,{once:true});
-
 /* Tải YouTube Player API */
 const youtubeScript=document.createElement("script");
 youtubeScript.src="https://www.youtube.com/iframe_api";
+youtubeScript.onerror=function(){
+ console.log("Không tải được YouTube Player API");
+};
 document.head.appendChild(youtubeScript);
 
 </script>
