@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>SHOP LIÊN QUÂN GIÁ RẺ | Shoplqaov.online</title>
-<meta name="description" content="SHOP LIÊN QUÂN GIÁ RẺ - Shop tài khoản Liên Quân Mobile với nhiều lựa chọn, giá tốt. Xem tài khoản, đăng ký, đăng nhập và mua hàng trực tuyến.">
+<meta name="description" content="SHOP LIÊN QUÂN GIÁ RẺ - Shop tài khoản Liên Quân Mobile với nhiều lựa chọn, giá tốt.">
 <meta name="robots" content="index, follow">
 <meta name="author" content="SHOP LIÊN QUÂN GIÁ RẺ">
 <meta name="theme-color" content="#101014">
@@ -122,6 +122,15 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <button onclick="document.getElementById('accounts').scrollIntoView()">Xem tài khoản</button>
 </section>
 
+<!-- THỐNG KÊ LƯỢT TRUY CẬP CÔNG KHAI -->
+<div class="container">
+  <div class="panel" style="text-align:center">
+    <h3>👁 THỐNG KÊ LƯỢT TRUY CẬP</h3>
+    <div class="money" id="publicVisitCount">Đang tải...</div>
+    <p class="small">Tổng lượt truy cập website</p>
+  </div>
+</div>
+
 <div class="container" id="announcementSection">
 <h2>📢 THÔNG BÁO TỪ SHOP</h2>
 <div id="announcementList">
@@ -202,6 +211,18 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 
 <div class="container hidden" id="adminPanel">
 <h2>QUẢN TRỊ ADMIN</h2>
+
+<!-- THỐNG KÊ DÀNH CHO ADMIN -->
+<div class="panel">
+<h3 style="color:#ffd166">📊 THỐNG KÊ WEBSITE</h3>
+<p>Tổng lượt truy cập:</p>
+<div class="money" id="adminVisitCount">Đang tải...</div>
+<hr>
+<p>Tổng tài khoản khách hàng đã đăng ký:</p>
+<div class="money" id="adminAccountCount">Đang tải...</div>
+<button onclick="loadAdminStats()">LÀM MỚI THỐNG KÊ</button>
+<p id="adminStatsStatus" class="small"></p>
+</div>
 
 <div class="panel">
 <h3 style="color:#ffd166">CỘNG SỐ DƯ ADMIN</h3>
@@ -321,6 +342,42 @@ function needLogin(productId){
  }
  if(productId)buyProduct(productId);
  else alert("Vui lòng chọn tài khoản trong danh sách sản phẩm.");
+}
+
+/* THỐNG KÊ LƯỢT TRUY CẬP CÔNG KHAI */
+async function countWebsiteVisit(){
+ const display=document.getElementById("publicVisitCount");
+ try{
+  const {data,error}=await supabaseClient.rpc("increment_site_visit");
+  if(error)throw error;
+  display.textContent=Number(data).toLocaleString("vi-VN");
+ }catch(error){
+  display.textContent="Chưa tải được";
+  console.error("Lỗi đếm lượt truy cập:",error.message);
+ }
+}
+
+/* THỐNG KÊ WEBSITE CHO ADMIN */
+async function loadAdminStats(){
+ if(!currentUser||!isAdminLoggedIn)return;
+
+ const status=document.getElementById("adminStatsStatus");
+ status.textContent="Đang tải thống kê...";
+
+ const {data,error}=await supabaseClient.rpc("admin_get_site_stats");
+
+ if(error){
+  status.textContent="Lỗi tải thống kê: "+error.message;
+  return;
+ }
+
+ document.getElementById("adminVisitCount").textContent=
+  Number(data.visits||0).toLocaleString("vi-VN");
+
+ document.getElementById("adminAccountCount").textContent=
+  Number(data.accounts||0).toLocaleString("vi-VN");
+
+ status.textContent="Đã cập nhật thống kê.";
 }
 
 /* ĐĂNG KÝ VÀ ĐĂNG NHẬP KHÁCH HÀNG */
@@ -710,6 +767,7 @@ async function adminLogin(){
  await loadAdminWalletBalance();
  await loadAdminDeposits();
  await loadAdminProducts();
+ await loadAdminStats();
 }
 
 /* ADMIN ĐĂNG THÔNG BÁO */
@@ -952,7 +1010,7 @@ async function loadAdminDeposits(){
 }
 
 async function approveDeposit(id,button){
- const ok=confirm("Bạn đã kiểm tra Vietcombank và chắc chắn đã nhận đúng số tiền của yêu cầu này chưa?");
+ const ok=confirm("Bạn đã kiểm tra ngân hàng và chắc chắn đã nhận đúng số tiền của yêu cầu này chưa?");
  if(!ok)return;
 
  button.disabled=true;
@@ -1099,6 +1157,7 @@ async function loadWheelHistory(){
 (async function init(){
  await loadProducts();
  await loadAnnouncements();
+ await countWebsiteVisit();
 
  const {data}=await supabaseClient.auth.getSession();
 
@@ -1114,6 +1173,7 @@ async function loadWheelHistory(){
    await loadAdminWalletBalance();
    await loadAdminDeposits();
    await loadAdminProducts();
+   await loadAdminStats();
   }else{
    await showCustomer(currentUser);
   }
@@ -1276,8 +1336,8 @@ async function loadWheelHistory(){
  document.head.appendChild(style);
 })();
 
-/* NHẠC NỀN YOUTUBE */
-const MUSIC_VIDEO_ID="kDdv4rgBMRI";
+/* NHẠC NỀN YOUTUBE - VIDEO J97 BẠN ĐÃ CHỌN */
+const MUSIC_VIDEO_ID="LUAiN16V2ag";
 
 let musicPlayer=null;
 let musicReady=false;
