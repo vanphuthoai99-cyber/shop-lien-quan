@@ -79,7 +79,48 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 .announcement-date{color:#aaa;font-size:12px}
 #youtubePlayer{position:fixed;width:200px;height:200px;left:-250px;top:0;overflow:hidden;opacity:0;pointer-events:none;z-index:-1}
 #youtubePlayer iframe{width:200px!important;height:200px!important}
+
+/* TOP NAP + THONG BAO MUA ACC */
+#publicHonorSection{margin-top:24px}
+.honor-panel{background:radial-gradient(circle at top,#30204f 0,#1b1730 48%,#17171d 100%);border:1px solid #7651a8;border-radius:18px;padding:20px;box-shadow:0 0 24px #8b5cf633}
+.honor-heading{text-align:center;margin:0 0 8px;color:#ffe082;font-size:26px;text-shadow:0 0 14px #ffb30088}
+.honor-subtitle{text-align:center;color:#d4c4ff;margin:0 0 18px;font-size:13px}
+.top-tabs{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0 18px}
+.top-tab{border:1px solid #8c70c7;background:linear-gradient(135deg,#39265f,#25213c);color:#e8ddff;border-radius:22px;padding:11px 20px}
+.top-tab.active{background:linear-gradient(135deg,#ffca28,#ff7043);color:#271400;border-color:#ffe082;box-shadow:0 0 16px #ffca2866}
+.top-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:stretch}
+.top-card{border-radius:14px;padding:16px 10px;text-align:center;border:1px solid #ffffff33;min-width:0;background:linear-gradient(145deg,#29263a,#1d1b2b)}
+.top-card.rank-1{background:linear-gradient(145deg,#79520b,#3b2a18 75%);border-color:#ffdf70;box-shadow:0 0 20px #ffc10755;transform:translateY(-5px)}
+.top-card.rank-2{background:linear-gradient(145deg,#43536a,#222d40);border-color:#b8d7ff}
+.top-card.rank-3{background:linear-gradient(145deg,#713b32,#382329);border-color:#ffb19b}
+.top-medal{font-size:34px;line-height:1.2}
+.top-rank{font-size:12px;letter-spacing:1px;font-weight:bold;color:#fff;margin:5px 0}
+.top-name{font-weight:bold;color:#fff;overflow-wrap:anywhere;margin:8px 0}
+.top-amount{font-size:19px;font-weight:bold;color:#ffe082;overflow-wrap:anywhere}
+.top-card.rank-2 .top-amount{color:#c9e2ff}
+.top-card.rank-3 .top-amount{color:#ffc0ad}
+.top-empty{color:#c9c2d8;font-size:13px}
+.top-footnote{text-align:center;color:#bcb2d0;font-size:12px;margin:16px 0 0}
+.ticker-panel{margin-top:18px;background:linear-gradient(100deg,#32134a,#172d4b,#421b36);border:1px solid #a45cce;border-radius:13px;padding:12px;overflow:hidden}
+.ticker-title{text-align:center;color:#ffe082;font-weight:bold;margin-bottom:9px}
+.purchase-ticker{display:flex;overflow:hidden;white-space:nowrap;position:relative}
+.purchase-ticker-track{display:flex;flex-shrink:0;min-width:100%;width:max-content;animation:purchaseTickerMove 32s linear infinite}
+.purchase-ticker:hover .purchase-ticker-track{animation-play-state:paused}
+.ticker-item{display:inline-flex;align-items:center;gap:7px;padding:8px 20px;color:#fff;font-size:14px}
+.ticker-item strong{color:#ffe082}
+.ticker-item em{color:#9fffc0;font-style:normal}
+.ticker-dot{color:#ff7bd5}
+@keyframes purchaseTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media(prefers-reduced-motion:reduce){.purchase-ticker-track{animation:none}}
 @media(max-width:600px){
+ .honor-panel{padding:14px}
+ .honor-heading{font-size:21px}
+ .top-cards{grid-template-columns:1fr;gap:9px}
+ .top-card.rank-1{transform:none}
+ .top-card{padding:12px}
+ .top-medal{font-size:27px}
+ .top-amount{font-size:18px}
+ .ticker-item{font-size:12px;padding:8px 14px}
  .container{padding:12px}
  nav a{display:inline-block;margin:6px}
  #adminLoginBtn{font-size:12px;padding:9px}
@@ -128,6 +169,31 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
     <div class="money" id="publicVisitCount">Đang tải...</div>
     <p class="small">Tổng lượt truy cập website</p>
   </div>
+</div>
+
+<!-- BANG VINH DANH TOP NAP + THANH THONG BAO MUA ACC -->
+<div class="container" id="publicHonorSection">
+  <section class="honor-panel">
+    <h2 class="honor-heading">🏆 VINH DANH ĐẠI GIA SHOP</h2>
+    <p class="honor-subtitle">Tôn vinh những khách hàng nạp tiền nổi bật</p>
+    <div class="top-tabs">
+      <button type="button" class="top-tab active" id="topWeekButton" onclick="loadPublicTop('week')">🏅 TOP NẠP TUẦN</button>
+      <button type="button" class="top-tab" id="topMonthButton" onclick="loadPublicTop('month')">👑 TOP NẠP THÁNG</button>
+    </div>
+    <div id="publicTopPeriodTitle" class="honor-subtitle">BẢNG XẾP HẠNG TUẦN</div>
+    <div id="publicTopList" class="top-cards">
+      <div class="top-card"><div class="top-empty">Đang tải bảng xếp hạng...</div></div>
+    </div>
+    <p class="top-footnote">💎 Chỉ tính các khoản nạp đã được Admin duyệt trong kỳ hiện tại.</p>
+  </section>
+  <section class="ticker-panel" aria-label="Thông báo khách hàng mua tài khoản">
+    <div class="ticker-title">🎉 KHÁCH HÀNG VỪA SĂN ĐƯỢC ACC 🎉</div>
+    <div class="purchase-ticker">
+      <div id="purchaseTickerTrack" class="purchase-ticker-track">
+        <span class="ticker-item">Đang tải giao dịch mua thành công...</span>
+      </div>
+    </div>
+  </section>
 </div>
 
 <div class="container" id="announcementSection">
@@ -354,6 +420,99 @@ async function countWebsiteVisit(){
   display.textContent="Chưa tải được";
   console.error("Lỗi đếm lượt truy cập:",error.message);
  }
+}
+
+/* BANG TOP NAP TUAN/THANG */
+const topMedals={1:"🥇",2:"🥈",3:"🥉"};
+let currentPublicTopPeriod="week";
+
+async function loadPublicTop(period){
+  const selectedPeriod=period==="month"?"month":"week";
+  currentPublicTopPeriod=selectedPeriod;
+  const weekButton=document.getElementById("topWeekButton");
+  const monthButton=document.getElementById("topMonthButton");
+  const title=document.getElementById("publicTopPeriodTitle");
+  const box=document.getElementById("publicTopList");
+  weekButton.classList.toggle("active",selectedPeriod==="week");
+  monthButton.classList.toggle("active",selectedPeriod==="month");
+  title.textContent=selectedPeriod==="week"?"BẢNG XẾP HẠNG TUẦN":"BẢNG XẾP HẠNG THÁNG";
+  box.innerHTML='<div class="top-card"><div class="top-empty">Đang cập nhật...</div></div>';
+
+  try{
+    const {data,error}=await supabaseClient.rpc("get_public_top_depositors",{p_period:selectedPeriod});
+    if(error)throw error;
+    const rows=Array.isArray(data)?data:[];
+    box.innerHTML="";
+    for(let rank=1;rank<=3;rank++){
+      const item=rows.find(row=>Number(row.rank)===rank);
+      const card=document.createElement("div");
+      card.className="top-card rank-"+rank;
+      const medal=document.createElement("div");
+      medal.className="top-medal";
+      medal.textContent=topMedals[rank];
+      const rankText=document.createElement("div");
+      rankText.className="top-rank";
+      rankText.textContent="TOP "+rank;
+      const name=document.createElement("div");
+      name.className="top-name";
+      name.textContent=item?.customer_name||"Đang chờ khách hàng";
+      const amount=document.createElement("div");
+      amount.className=item?"top-amount":"top-empty";
+      amount.textContent=item?money(item.total_deposit):"Chưa có dữ liệu";
+      card.append(medal,rankText,name,amount);
+      box.appendChild(card);
+    }
+  }catch(error){
+    box.innerHTML="";
+    const message=document.createElement("div");
+    message.className="top-card top-empty";
+    message.textContent="Không tải được bảng Top: "+(error.message||"Lỗi kết nối");
+    box.appendChild(message);
+    console.error("Lỗi tải Top nạp:",error);
+  }
+}
+
+/* THANH CHAY THONG BAO MUA ACC */
+async function loadPublicPurchaseTicker(){
+  const track=document.getElementById("purchaseTickerTrack");
+  if(!track)return;
+  try{
+    const {data,error}=await supabaseClient.rpc("get_public_purchase_ticker");
+    if(error)throw error;
+    const rows=Array.isArray(data)?data:[];
+    track.innerHTML="";
+    if(!rows.length){
+      const empty=document.createElement("span");
+      empty.className="ticker-item";
+      empty.textContent="Chưa có giao dịch mua tài khoản thành công.";
+      track.appendChild(empty);
+      track.style.animation="none";
+      return;
+    }
+    const makeItems=()=>{
+      rows.forEach(item=>{
+        const wrapper=document.createElement("span");
+        wrapper.className="ticker-item";
+        const icon=document.createElement("span"); icon.textContent="🎮";
+        const customer=document.createElement("strong"); customer.textContent=item.customer_name||"Khách hàng";
+        const action=document.createElement("span"); action.textContent="vừa mua thành công";
+        const product=document.createElement("em"); product.textContent=item.product_name||"Tài khoản Liên Quân";
+        const dot=document.createElement("span"); dot.className="ticker-dot"; dot.textContent="✦";
+        wrapper.append(icon,customer,action,product,dot);
+        track.appendChild(wrapper);
+      });
+    };
+    makeItems();
+    makeItems();
+    track.style.animation="";
+  }catch(error){
+    track.innerHTML="";
+    const message=document.createElement("span");
+    message.className="ticker-item";
+    message.textContent="Chưa tải được thông báo mua hàng.";
+    track.appendChild(message);
+    console.error("Lỗi tải thông báo mua ACC:",error);
+  }
 }
 
 /* THỐNG KÊ WEBSITE CHO ADMIN */
@@ -676,7 +835,6 @@ function showPurchaseResult(login,password){
  box.prepend(result);
  alert("Mua thành công! Thông tin tài khoản đã hiển thị trong lịch sử mua hàng.");
 }
-
 async function loadPurchaseHistory(){
  if(!currentUser||isAdminLoggedIn)return;
  const box=document.getElementById("purchaseHistory");
@@ -1112,7 +1270,6 @@ async function loadProducts(){
   box.appendChild(card);
  });
 }
-
 /* LỊCH SỬ VÒNG QUAY */
 async function loadWheelHistory(){
  const box=document.getElementById("wheelHistory");
@@ -1157,6 +1314,14 @@ async function loadWheelHistory(){
  await loadProducts();
  await loadAnnouncements();
  await countWebsiteVisit();
+ await loadPublicTop("week");
+ await loadPublicPurchaseTicker();
+
+ // Tu dong cap nhat Top va thong bao moi moi 60 giay
+ setInterval(()=>{
+  loadPublicTop(currentPublicTopPeriod);
+  loadPublicPurchaseTicker();
+ },60000);
 
  const {data}=await supabaseClient.auth.getSession();
 
