@@ -146,14 +146,9 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 
 <div class="panel">
 <h3>NẠP TIỀN VÀO VÍ</h3>
-<label>Chọn số tiền muốn nạp</label>
-<select id="depositAmount">
-<option value="50000">50.000đ</option>
-<option value="100000">100.000đ</option>
-<option value="200000">200.000đ</option>
-<option value="500000">500.000đ</option>
-<option value="1000000">1.000.000đ</option>
-</select>
+<label>Nhập số tiền bạn muốn nạp (VNĐ)</label>
+<input id="depositAmount" type="number" min="1" step="1" placeholder="Ví dụ: 150000">
+<p class="small">Bạn có thể tự nhập số tiền muốn nạp.</p>
 <button onclick="createDeposit()">TẠO MÃ NẠP TIỀN</button>
 <div id="depositArea" class="hidden">
 <p class="yellow">Quét QR để chuyển khoản đúng số tiền và nội dung bên dưới.</p>
@@ -436,6 +431,7 @@ async function adminCreditWallet(){
  await loadAdminWalletBalance();
 }
 
+/* KHÁCH TỰ NHẬP SỐ TIỀN NẠP */
 async function createDeposit(){
  if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng.");
@@ -443,16 +439,30 @@ async function createDeposit(){
  }
 
  const amount=Number(document.getElementById("depositAmount").value);
+
+ if(!Number.isSafeInteger(amount)||amount<=0){
+  alert("Vui lòng nhập số tiền muốn nạp hợp lệ.");
+  document.getElementById("depositAmount").focus();
+  return;
+ }
+
  const suffix=Math.random().toString(36).substring(2,7).toUpperCase();
  const content="NAPTIEN"+Date.now().toString().slice(-7)+suffix;
 
  showStatus("Đang tạo yêu cầu nạp tiền...");
 
  const {error}=await supabaseClient.from("deposit_requests").insert({
-  user_id:currentUser.id,amount,transfer_content:content,status:"pending"
+  user_id:currentUser.id,
+  amount:amount,
+  transfer_content:content,
+  status:"pending"
  });
 
- if(error){showStatus("Không tạo được yêu cầu: "+error.message);return;}
+ if(error){
+  showStatus("Không tạo được yêu cầu: "+error.message);
+  alert("Lỗi tạo yêu cầu nạp: "+error.message);
+  return;
+ }
 
  currentDepositContent=content;
 
@@ -466,7 +476,7 @@ async function createDeposit(){
  document.getElementById("qrContent").textContent=content;
  document.getElementById("depositArea").classList.remove("hidden");
 
- showStatus("Đã tạo yêu cầu nạp tiền. Hãy chuyển khoản đúng nội dung.");
+ showStatus("Đã tạo yêu cầu nạp tiền. Hãy chuyển khoản đúng số tiền và nội dung.");
  await loadDepositHistory();
 }
 
@@ -1147,7 +1157,7 @@ async function loadWheelHistory(){
  document.head.appendChild(style);
 })();
 
-/* NHẠC NỀN YOUTUBE - VIDEO BẠN ĐÃ CHỌN */
+/* NHẠC NỀN YOUTUBE */
 const MUSIC_VIDEO_ID="kDdv4rgBMRI";
 
 let musicPlayer=null;
@@ -1168,7 +1178,6 @@ function startBackgroundMusic(){
  }
 }
 
-/* Ghi nhận thao tác của khách, kể cả khi YouTube chưa tải xong */
 function unlockBackgroundMusic(){
  userInteracted=true;
  startBackgroundMusic();
@@ -1178,7 +1187,6 @@ document.addEventListener("touchstart",unlockBackgroundMusic,{passive:true});
 document.addEventListener("click",unlockBackgroundMusic);
 document.addEventListener("keydown",unlockBackgroundMusic);
 
-/* Khởi tạo trình phát YouTube */
 window.onYouTubeIframeAPIReady=function(){
  musicPlayer=new YT.Player("youtubePlayer",{
   width:"200",
@@ -1214,7 +1222,6 @@ window.onYouTubeIframeAPIReady=function(){
  });
 };
 
-/* Tải YouTube Player API */
 const youtubeScript=document.createElement("script");
 youtubeScript.src="https://www.youtube.com/iframe_api";
 youtubeScript.onerror=function(){
