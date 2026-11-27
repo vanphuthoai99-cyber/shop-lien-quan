@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -172,9 +173,22 @@ nav a{display:inline-block;margin:6px}
 <div class="container hidden" id="adminPanel">
 <h2>QUẢN TRỊ ADMIN</h2>
 
+<!-- CHỨC NĂNG ADMIN TỰ CỘNG SỐ DƯ -->
+<div class="panel">
+<h3 style="color:#ffd166">CỘNG SỐ DƯ ADMIN</h3>
+<p>Số dư ví Admin hiện tại:</p>
+<div class="money" id="adminWalletBalance">Chưa tải</div>
+<button onclick="loadAdminWalletBalance()">LÀM MỚI SỐ DƯ</button>
+<hr>
+<label>Nhập số tiền muốn cộng (VNĐ)</label>
+<input type="number" id="adminCreditAmount" min="1" placeholder="Ví dụ: 100000">
+<button onclick="adminCreditWallet()">CỘNG TIỀN VÀO VÍ ADMIN</button>
+<p id="adminCreditStatus"></p>
+</div>
+
 <div class="panel">
 <h3>THÊM TÀI KHOẢN LIÊN QUÂN</h3>
-<p class="small">Chọn ảnh trong thư viện iPhone, nhập thông tin và đăng bán.</p>
+<p class="small">Chọn ảnh trong thư viện điện thoại, nhập thông tin và đăng bán.</p>
 <div class="admin-form">
 <label>Ảnh tài khoản</label>
 <input id="productImage" type="file" accept="image/*">
@@ -256,9 +270,9 @@ function showStatus(message){
 }
 
 function needLogin(productId){
- if(!currentUser){
+ if(!currentUser || isAdminLoggedIn){
   document.getElementById("customerBox").scrollIntoView();
-  alert("Vui lòng đăng nhập trước khi mua tài khoản.");
+  alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
   return;
  }
  if(productId){
@@ -283,7 +297,6 @@ async function customerRegister(){
  }
 
  showStatus("Đang đăng ký...");
-
  const {data,error}=await supabaseClient.auth.signUp({
   email,password,options:{data:{phone}}
  });
@@ -311,7 +324,6 @@ async function customerLogin(){
  }
 
  showStatus("Đang đăng nhập...");
-
  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
 
  if(error){
@@ -353,7 +365,7 @@ async function customerLogout(){
 }
 
 async function loadWallet(){
- if(!currentUser)return;
+ if(!currentUser || isAdminLoggedIn)return;
 
  const {data,error}=await supabaseClient.from("wallets")
   .select("balance")
@@ -368,9 +380,67 @@ async function loadWallet(){
  document.getElementById("walletBalance").textContent=money(data?data.balance:0);
 }
 
+/* ADMIN TỰ XEM SỐ DƯ */
+async function loadAdminWalletBalance(){
+ const display=document.getElementById("adminWalletBalance");
+
+ if(!currentUser || !isAdminLoggedIn){
+  display.textContent="Vui lòng đăng nhập Admin";
+  return;
+ }
+
+ const {data,error}=await supabaseClient.from("wallets")
+  .select("balance")
+  .eq("user_id",currentUser.id)
+  .maybeSingle();
+
+ if(error){
+  display.textContent="Lỗi tải số dư: "+error.message;
+  return;
+ }
+
+ display.textContent=money(data?data.balance:0);
+}
+
+/* ADMIN TỰ CỘNG TIỀN */
+async function adminCreditWallet(){
+ const amount=Number(document.getElementById("adminCreditAmount").value);
+ const status=document.getElementById("adminCreditStatus");
+
+ if(!currentUser || !isAdminLoggedIn){
+  status.textContent="Bạn chưa đăng nhập Admin.";
+  return;
+ }
+
+ if(!Number.isSafeInteger(amount)||amount<=0){
+  status.textContent="Vui lòng nhập số tiền hợp lệ.";
+  return;
+ }
+
+ if(!confirm("Xác nhận cộng "+money(amount)+" vào ví Admin?"))return;
+
+ status.textContent="Đang xử lý...";
+
+ const {data,error}=await supabaseClient.rpc(
+  "admin_credit_own_wallet",
+  {p_amount:amount}
+ );
+
+ if(error){
+  status.textContent="Lỗi: "+error.message;
+  return;
+ }
+
+ document.getElementById("adminCreditAmount").value="";
+ status.textContent="Đã cộng tiền thành công!";
+
+ await loadAdminWalletBalance();
+}
+
+/* TẠO YÊU CẦU NẠP TIỀN */
 async function createDeposit(){
- if(!currentUser){
-  alert("Vui lòng đăng nhập.");
+ if(!currentUser || isAdminLoggedIn){
+  alert("Vui lòng đăng nhập tài khoản khách hàng.");
   return;
  }
 
@@ -416,7 +486,7 @@ async function copyTransferContent(){
 }
 
 async function loadDepositHistory(){
- if(!currentUser)return;
+ if(!currentUser || isAdminLoggedIn)return;
  const box=document.getElementById("depositHistory");
 
  const {data,error}=await supabaseClient.from("deposit_requests")
@@ -450,7 +520,7 @@ async function loadDepositHistory(){
 }
 
 async function loadWalletHistory(){
- if(!currentUser)return;
+ if(!currentUser || isAdminLoggedIn)return;
  const box=document.getElementById("walletHistory");
 
  const {data,error}=await supabaseClient.from("wallet_transactions")
@@ -477,21 +547,19 @@ async function loadWalletHistory(){
  });
 }
 
-/* ĐÃ SỬA: UUID ĐƯỢC GỬI NGUYÊN DẠNG, KHÔNG CHUYỂN SANG NUMBER */
 async function buyProduct(productId){
- if(!currentUser){
-  alert("Vui lòng đăng nhập trước khi mua.");
+ if(!currentUser || isAdminLoggedIn){
+  alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
   return;
  }
 
  if(typeof productId!=="string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId)){
+ !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(productId)){
   alert("Mã sản phẩm không hợp lệ. Vui lòng tải lại trang.");
   return;
  }
 
- const ok=confirm("Bạn có chắc chắn muốn mua tài khoản này bằng số dư ví không?");
- if(!ok)return;
+ if(!confirm("Bạn có chắc chắn muốn mua tài khoản này bằng số dư ví không?"))return;
 
  showStatus("Đang xử lý đơn hàng...");
 
@@ -549,7 +617,7 @@ function showPurchaseResult(login,password){
 }
 
 async function loadPurchaseHistory(){
- if(!currentUser)return;
+ if(!currentUser || isAdminLoggedIn)return;
  const box=document.getElementById("purchaseHistory");
  box.textContent="Đang tải lịch sử mua hàng...";
 
@@ -601,6 +669,7 @@ async function loadPurchaseHistory(){
  });
 }
 
+/* ĐĂNG NHẬP ADMIN */
 document.getElementById("adminLoginBtn").onclick=()=>{
  document.getElementById("adminLoginBox").style.display="block";
 };
@@ -646,10 +715,12 @@ async function adminLogin(){
  document.getElementById("customerInfo").classList.add("hidden");
  document.getElementById("customerForms").classList.remove("hidden");
 
+ await loadAdminWalletBalance();
  await loadAdminDeposits();
  await loadAdminProducts();
 }
 
+/* XEM TRƯỚC ẢNH SẢN PHẨM */
 document.getElementById("productImage").addEventListener("change",function(){
  const file=this.files[0];
  const preview=document.getElementById("imagePreview");
@@ -684,6 +755,7 @@ document.getElementById("productImage").addEventListener("change",function(){
  status.textContent="Đã chọn: "+file.name;
 });
 
+/* ADMIN ĐĂNG SẢN PHẨM */
 async function adminAddProduct(){
  if(!currentUser||!isAdminLoggedIn){
   alert("Vui lòng đăng nhập Admin.");
@@ -743,10 +815,7 @@ async function adminAddProduct(){
    p_account_password:accountPassword
   });
 
-  if(error){
-   throw new Error("Ảnh đã tải lên nhưng lưu sản phẩm thất bại: "+error.message);
-  }
-
+  if(error)throw new Error("Ảnh đã tải lên nhưng lưu sản phẩm thất bại: "+error.message);
   if(data&&data.error)throw new Error(data.error);
 
   alert("ĐĂNG BÁN SẢN PHẨM THÀNH CÔNG!");
@@ -774,6 +843,7 @@ async function adminAddProduct(){
  }
 }
 
+/* ADMIN XEM YÊU CẦU NẠP */
 async function loadAdminDeposits(){
  const box=document.getElementById("adminDeposits");
  box.textContent="Đang tải...";
@@ -843,6 +913,7 @@ async function approveDeposit(id,button){
  await loadAdminDeposits();
 }
 
+/* ADMIN QUẢN LÝ SẢN PHẨM */
 async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
@@ -891,6 +962,7 @@ async function adminLogout(){
  alert("Đã đăng xuất Admin.");
 }
 
+/* TẢI SẢN PHẨM CHO KHÁCH */
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
@@ -902,11 +974,13 @@ async function loadProducts(){
   return;
  }
 
- if(!data||!data.length)return;
-
  const box=document.getElementById("products");
- box.innerHTML="";
+ if(!data||!data.length){
+  box.innerHTML="<p>Hiện chưa có tài khoản nào đang bán.</p>";
+  return;
+ }
 
+ box.innerHTML="";
  data.forEach(p=>{
   const card=document.createElement("div");
   card.className="card";
@@ -934,6 +1008,7 @@ async function loadProducts(){
  });
 }
 
+/* KIỂM TRA PHIÊN ĐĂNG NHẬP */
 (async function init(){
  await loadProducts();
 
@@ -948,6 +1023,7 @@ async function loadProducts(){
    isAdminLoggedIn=true;
    document.getElementById("adminPanel").classList.remove("hidden");
    document.getElementById("customerForms").classList.remove("hidden");
+   await loadAdminWalletBalance();
    await loadAdminDeposits();
    await loadAdminProducts();
   }else{
