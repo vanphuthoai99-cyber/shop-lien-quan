@@ -112,6 +112,42 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 .ticker-dot{color:#ff7bd5}
 @keyframes purchaseTickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media(prefers-reduced-motion:reduce){.purchase-ticker-track{animation:none}}
+
+/* KHU VUC GIOI THIEU BAN BE */
+#referralPanel{
+ border:1px solid #b68a36;
+ background:linear-gradient(145deg,#302514,#202027);
+ box-shadow:0 0 18px #ffd16622;
+}
+#referralPanel h3{color:#ffd166;text-align:center}
+#referralPanel h4{color:#ffe082}
+#referralPanel input{
+ border-color:#8e713b;
+ color:#ffe082;
+}
+.referral-stat{
+ background:#17151b;
+ border:1px solid #594a2b;
+ border-radius:10px;
+ padding:12px;
+ margin:10px 0;
+}
+.referral-stat .money{color:#ffd166}
+.referral-copy-button{
+ background:linear-gradient(135deg,#d99b19,#ffcf4a);
+ color:#271900;
+}
+.referral-history-item{
+ padding:12px;
+ border-bottom:1px solid #5a4b2d;
+ overflow-wrap:anywhere;
+}
+.referral-history-item strong{color:#ffe082}
+.referral-note{
+ color:#d7c7a3;
+ font-size:13px;
+ line-height:1.6;
+}
 @media(max-width:600px){
  .honor-panel{padding:14px}
  .honor-heading{font-size:21px}
@@ -222,6 +258,8 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <div class="panel" id="customerForms">
 <input id="customerEmail" type="email" placeholder="Email">
 <input id="customerPhone" type="tel" placeholder="Số điện thoại (khi đăng ký)">
+<input id="customerReferralCode" type="text" placeholder="Mã giới thiệu (nếu có)" autocomplete="off">
+<p class="small">Nếu được bạn bè giới thiệu, hãy nhập mã giới thiệu hoặc mở link có mã giới thiệu trước khi đăng ký.</p>
 <input id="customerPassword" type="password" placeholder="Mật khẩu">
 <button onclick="customerRegister()">ĐĂNG KÝ</button>
 <button onclick="customerLogin()">ĐĂNG NHẬP</button>
@@ -237,6 +275,49 @@ a.zalo{display:inline-block;background:#0877df;color:white;text-decoration:none;
 <div class="money" id="walletBalance">0đ</div>
 <button onclick="loadWallet()">Làm mới số dư</button>
 <button onclick="customerLogout()">ĐĂNG XUẤT</button>
+</div>
+
+<!-- TRANG CA NHAN GIOI THIEU -->
+<div class="panel" id="referralPanel">
+<h3>🎁 GIỚI THIỆU BẠN BÈ - NHẬN THƯỞNG 10%</h3>
+<p class="referral-note">
+Chia sẻ mã hoặc đường link giới thiệu của bạn cho bạn bè.
+Khi người được giới thiệu nạp tiền và Admin duyệt thành công,
+bạn sẽ nhận thưởng 10% số tiền nạp vào ví.
+</p>
+
+<label><b>MÃ GIỚI THIỆU CỦA BẠN</b></label>
+<input id="myReferralCode" type="text" readonly placeholder="Đang tải mã giới thiệu...">
+
+<label><b>LINK GIỚI THIỆU CỦA BẠN</b></label>
+<input id="myReferralLink" type="text" readonly placeholder="Đang tạo đường link...">
+
+<button type="button" class="referral-copy-button" onclick="copyMyReferralLink()">
+📋 SAO CHÉP LINK GIỚI THIỆU
+</button>
+<button type="button" onclick="copyMyReferralCode()">
+SAO CHÉP MÃ
+</button>
+
+<div class="referral-stat">
+<p class="small">👥 SỐ NGƯỜI ĐÃ GIỚI THIỆU</p>
+<div class="money" id="referralPeopleCount">Đang tải...</div>
+</div>
+
+<div class="referral-stat">
+<p class="small">💰 TỔNG TIỀN THƯỞNG ĐÃ NHẬN</p>
+<div class="money" id="referralTotalReward">Đang tải...</div>
+</div>
+
+<h4>📜 LỊCH SỬ THƯỞNG GIỚI THIỆU</h4>
+<div id="referralHistory">
+<p class="small">Đang tải lịch sử thưởng...</p>
+</div>
+
+<p class="referral-note">
+Lưu ý: Tiền thưởng được cộng tự động khi khoản nạp của người được giới thiệu
+chuyển sang trạng thái đã được Admin duyệt. Mỗi giao dịch nạp chỉ được thưởng một lần.
+</p>
 </div>
 
 <div class="panel">
@@ -383,6 +464,22 @@ let currentDepositContent="";
 let isAdminLoggedIn=false;
 let selectedImage=null;
 
+/* LAY MA GIOI THIEU TU DUONG LINK */
+function getReferralCodeFromUrl(){
+ const params=new URLSearchParams(window.location.search);
+ return (params.get("ref")||"").trim().toUpperCase();
+}
+
+/* TU DIEN MA GIOI THIEU KHI KHACH MO LINK */
+(function prefillReferralCode(){
+ const incomingCode=getReferralCodeFromUrl();
+ const input=document.getElementById("customerReferralCode");
+
+ if(incomingCode&&input){
+  input.value=incomingCode;
+ }
+})();
+
 function money(n){
  return Number(n||0).toLocaleString("vi-VN")+"đ";
 }
@@ -409,7 +506,196 @@ function needLogin(productId){
  else alert("Vui lòng chọn tài khoản trong danh sách sản phẩm.");
 }
 
-/* THỐNG KÊ LƯỢT TRUY CẬP CÔNG KHAI */
+/* THONG TIN VA THONG KE GIOI THIEU CUA KHACH */
+async function loadReferralInfo(){
+ if(!currentUser||isAdminLoggedIn)return;
+
+ const codeInput=document.getElementById("myReferralCode");
+ const linkInput=document.getElementById("myReferralLink");
+ const peopleDisplay=document.getElementById("referralPeopleCount");
+ const totalDisplay=document.getElementById("referralTotalReward");
+ const historyBox=document.getElementById("referralHistory");
+
+ if(!codeInput||!linkInput||!peopleDisplay||!totalDisplay||!historyBox)return;
+
+ codeInput.value="";
+ linkInput.value="";
+ peopleDisplay.textContent="Đang tải...";
+ totalDisplay.textContent="Đang tải...";
+ historyBox.textContent="Đang tải lịch sử thưởng...";
+
+ try{
+  /* LAY MA GIOI THIEU RIENG CUA NGUOI DANG DANG NHAP */
+  const {data:codeData,error:codeError}=await supabaseClient
+   .from("referral_codes")
+   .select("code")
+   .eq("user_id",currentUser.id)
+   .maybeSingle();
+
+  if(codeError)throw codeError;
+
+  if(!codeData||!codeData.code){
+   codeInput.value="Chưa có mã giới thiệu";
+   linkInput.value="";
+   throw new Error("Tài khoản chưa có mã giới thiệu. Vui lòng kiểm tra trigger tạo mã giới thiệu trong Supabase.");
+  }
+
+  const myCode=String(codeData.code).toUpperCase();
+  codeInput.value=myCode;
+
+  /* TAO LINK CHIA SE */
+  const referralURL=new URL(window.location.origin+window.location.pathname);
+  referralURL.searchParams.set("ref",myCode);
+  linkInput.value=referralURL.toString();
+
+  /* DEM SO NGUOI DUOC GIOI THIEU */
+  const {count:peopleCount,error:peopleError}=await supabaseClient
+   .from("customer_referrals")
+   .select("user_id",{count:"exact",head:true})
+   .eq("referred_by_user_id",currentUser.id);
+
+  if(peopleError)throw peopleError;
+
+  peopleDisplay.textContent=Number(peopleCount||0).toLocaleString("vi-VN");
+
+  /* LAY LICH SU THUONG */
+  let rewards=[];
+  let rewardError=null;
+
+  const firstRewardQuery=await supabaseClient
+   .from("referral_rewards")
+   .select("deposit_amount,reward_amount,created_at")
+   .eq("referrer_user_id",currentUser.id)
+   .order("created_at",{ascending:false});
+
+  if(firstRewardQuery.error){
+   /* NEU BANG KHONG CO created_at THI THU LAI VOI CAC COT CO BAN */
+   const fallbackQuery=await supabaseClient
+    .from("referral_rewards")
+    .select("deposit_amount,reward_amount")
+    .eq("referrer_user_id",currentUser.id);
+
+   if(fallbackQuery.error){
+    rewardError=fallbackQuery.error;
+   }else{
+    rewards=fallbackQuery.data||[];
+   }
+  }else{
+   rewards=firstRewardQuery.data||[];
+  }
+
+  if(rewardError)throw rewardError;
+
+  const totalReward=rewards.reduce((sum,item)=>{
+   return sum+Number(item.reward_amount||0);
+  },0);
+
+  totalDisplay.textContent=money(totalReward);
+
+  historyBox.innerHTML="";
+
+  if(!rewards.length){
+   historyBox.textContent="Bạn chưa có khoản thưởng giới thiệu nào.";
+   return;
+  }
+
+  rewards.forEach(item=>{
+   const row=document.createElement("div");
+   row.className="referral-history-item";
+
+   const deposit=document.createElement("p");
+   deposit.textContent="Người được giới thiệu đã nạp: "+money(item.deposit_amount);
+
+   const reward=document.createElement("strong");
+   reward.textContent="Bạn nhận thưởng: +"+money(item.reward_amount);
+
+   row.append(deposit,reward);
+
+   if(item.created_at){
+    const date=document.createElement("p");
+    date.className="small";
+    date.textContent="Thời gian: "+new Date(item.created_at).toLocaleString("vi-VN");
+    row.appendChild(date);
+   }
+
+   historyBox.appendChild(row);
+  });
+
+ }catch(error){
+  if(peopleDisplay.textContent==="Đang tải..."){
+   peopleDisplay.textContent="Chưa tải được";
+  }
+
+  if(totalDisplay.textContent==="Đang tải..."){
+   totalDisplay.textContent="Chưa tải được";
+  }
+
+  if(historyBox.textContent==="Đang tải lịch sử thưởng..."){
+   historyBox.textContent="Không tải được dữ liệu giới thiệu: "+(error.message||"Lỗi kết nối");
+  }
+
+  console.error("Lỗi tải thông tin giới thiệu:",error);
+ }
+}
+
+/* SAO CHEP LINK GIOI THIEU */
+async function copyMyReferralLink(){
+ const input=document.getElementById("myReferralLink");
+ const value=input?input.value.trim():"";
+
+ if(!value){
+  alert("Chưa có link giới thiệu. Vui lòng tải lại thông tin.");
+  return;
+ }
+
+ try{
+  await navigator.clipboard.writeText(value);
+  alert("Đã sao chép link giới thiệu. Hãy gửi link này cho bạn bè!");
+ }catch(error){
+  input.focus();
+  input.select();
+
+  try{
+   const copied=document.execCommand("copy");
+   if(copied){
+    alert("Đã sao chép link giới thiệu!");
+   }else{
+    alert("Không tự sao chép được. Hãy nhấn giữ đường link để sao chép.");
+   }
+  }catch(copyError){
+   alert("Hãy nhấn giữ đường link để sao chép.");
+  }
+ }
+}
+
+/* SAO CHEP MA GIOI THIEU */
+async function copyMyReferralCode(){
+ const input=document.getElementById("myReferralCode");
+ const value=input?input.value.trim():"";
+
+ if(!value||value==="Chưa có mã giới thiệu"){
+  alert("Bạn chưa có mã giới thiệu.");
+  return;
+ }
+
+ try{
+  await navigator.clipboard.writeText(value);
+  alert("Đã sao chép mã giới thiệu: "+value);
+ }catch(error){
+  input.focus();
+  input.select();
+
+  try{
+   const copied=document.execCommand("copy");
+   if(copied)alert("Đã sao chép mã giới thiệu!");
+   else alert("Hãy nhấn giữ mã để sao chép.");
+  }catch(copyError){
+   alert("Hãy nhấn giữ mã để sao chép.");
+  }
+ }
+}
+
+/* THONG KE LUOT TRUY CAP CONG KHAI */
 async function countWebsiteVisit(){
  const display=document.getElementById("publicVisitCount");
  try{
@@ -515,7 +801,7 @@ async function loadPublicPurchaseTicker(){
   }
 }
 
-/* THỐNG KÊ WEBSITE CHO ADMIN */
+/* THONG KE WEBSITE CHO ADMIN */
 async function loadAdminStats(){
  if(!currentUser||!isAdminLoggedIn)return;
 
@@ -538,11 +824,12 @@ async function loadAdminStats(){
  status.textContent="Đã cập nhật thống kê.";
 }
 
-/* ĐĂNG KÝ VÀ ĐĂNG NHẬP KHÁCH HÀNG */
+/* DANG KY VA DANG NHAP KHACH HANG */
 async function customerRegister(){
  const email=document.getElementById("customerEmail").value.trim();
  const phone=document.getElementById("customerPhone").value.trim();
  const password=document.getElementById("customerPassword").value;
+ const referralCode=document.getElementById("customerReferralCode").value.trim().toUpperCase();
 
  if(!email||!phone||!password){
   showStatus("Vui lòng nhập email, số điện thoại và mật khẩu.");
@@ -554,8 +841,17 @@ async function customerRegister(){
  }
 
  showStatus("Đang đăng ký...");
+
+ /* GUI MA GIOI THIEU VAO USER METADATA DE TRIGGER SUPABASE XU LY */
  const {data,error}=await supabaseClient.auth.signUp({
-  email,password,options:{data:{phone}}
+  email,
+  password,
+  options:{
+   data:{
+    phone:phone,
+    referral_code:referralCode
+   }
+  }
  });
 
  if(error){showStatus("Lỗi đăng ký: "+error.message);return;}
@@ -598,6 +894,7 @@ async function showCustomer(user){
  document.getElementById("customerPhoneText").textContent="Số điện thoại: "+(user.user_metadata.phone||"Chưa cập nhật");
 
  await loadWallet();
+ await loadReferralInfo();
  await loadDepositHistory();
  await loadWalletHistory();
  await loadPurchaseHistory();
@@ -614,10 +911,16 @@ async function customerLogout(){
  document.getElementById("adminPanel").classList.add("hidden");
  document.getElementById("wheelHistory").textContent="Đăng nhập để xem lịch sử";
 
+ document.getElementById("myReferralCode").value="";
+ document.getElementById("myReferralLink").value="";
+ document.getElementById("referralPeopleCount").textContent="0";
+ document.getElementById("referralTotalReward").textContent="0đ";
+ document.getElementById("referralHistory").textContent="Đăng nhập để xem lịch sử thưởng.";
+
  showStatus("Đã đăng xuất.");
 }
 
-/* VÍ KHÁCH HÀNG VÀ ADMIN */
+/* VI KHACH HANG VA ADMIN */
 async function loadWallet(){
  if(!currentUser||isAdminLoggedIn)return;
 
@@ -670,7 +973,7 @@ async function adminCreditWallet(){
  await loadAdminWalletBalance();
 }
 
-/* TẠO YÊU CẦU NẠP TIỀN */
+/* TAO YEU CAU NAP TIEN */
 async function createDeposit(){
  if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng.");
@@ -771,13 +1074,22 @@ async function loadWalletHistory(){
  data.forEach(item=>{
   const div=document.createElement("div");
   div.className="item";
-  div.textContent=(item.transaction_type==="deposit"?"Nạp tiền +":"Giao dịch ")
+
+  let transactionLabel="Giao dịch ";
+  if(item.transaction_type==="deposit"){
+   transactionLabel="Nạp tiền +";
+  }else if(item.transaction_type==="referral_reward"){
+   transactionLabel="🎁 Thưởng giới thiệu +";
+  }
+
+  div.textContent=transactionLabel
    +money(item.amount)+" | "+(item.description||"");
+
   box.appendChild(div);
  });
 }
 
-/* MUA TÀI KHOẢN */
+/* MUA TAI KHOAN */
 async function buyProduct(productId){
  if(!currentUser||isAdminLoggedIn){
   alert("Vui lòng đăng nhập tài khoản khách hàng trước khi mua.");
@@ -835,6 +1147,7 @@ function showPurchaseResult(login,password){
  box.prepend(result);
  alert("Mua thành công! Thông tin tài khoản đã hiển thị trong lịch sử mua hàng.");
 }
+
 async function loadPurchaseHistory(){
  if(!currentUser||isAdminLoggedIn)return;
  const box=document.getElementById("purchaseHistory");
@@ -881,7 +1194,7 @@ async function loadPurchaseHistory(){
  });
 }
 
-/* ĐĂNG NHẬP ADMIN */
+/* DANG NHAP ADMIN */
 document.getElementById("adminLoginBtn").onclick=()=>{
  document.getElementById("adminLoginBox").style.display="block";
 };
@@ -927,7 +1240,7 @@ async function adminLogin(){
  await loadAdminStats();
 }
 
-/* ADMIN ĐĂNG THÔNG BÁO */
+/* ADMIN DANG THONG BAO */
 async function loadAnnouncements(){
  const box=document.getElementById("announcementList");
  if(!box)return;
@@ -1013,7 +1326,7 @@ async function adminPublishAnnouncement(){
  }
 }
 
-/* XEM TRƯỚC ẢNH SẢN PHẨM */
+/* XEM TRUOC ANH SAN PHAM */
 document.getElementById("productImage").addEventListener("change",function(){
  const file=this.files[0];
  const preview=document.getElementById("imagePreview");
@@ -1048,7 +1361,7 @@ document.getElementById("productImage").addEventListener("change",function(){
  status.textContent="Đã chọn: "+file.name;
 });
 
-/* ADMIN THÊM SẢN PHẨM */
+/* ADMIN THEM SAN PHAM */
 async function adminAddProduct(){
  if(!currentUser||!isAdminLoggedIn){alert("Vui lòng đăng nhập Admin.");return;}
 
@@ -1124,7 +1437,7 @@ async function adminAddProduct(){
  }
 }
 
-/* ADMIN DUYỆT NẠP TIỀN */
+/* ADMIN DUYET NAP TIEN */
 async function loadAdminDeposits(){
  const box=document.getElementById("adminDeposits");
  box.textContent="Đang tải...";
@@ -1186,7 +1499,7 @@ async function approveDeposit(id,button){
  await loadAdminDeposits();
 }
 
-/* QUẢN LÝ SẢN PHẨM ADMIN */
+/* QUAN LY SAN PHAM ADMIN */
 async function loadAdminProducts(){
  const box=document.getElementById("adminProductInfo");
 
@@ -1228,7 +1541,7 @@ async function adminLogout(){
  alert("Đã đăng xuất Admin.");
 }
 
-/* TẢI SẢN PHẨM NGOÀI TRANG CHỦ */
+/* TAI SAN PHAM NGOAI TRANG CHU */
 async function loadProducts(){
  const {data,error}=await supabaseClient.from("products")
   .select("id,title,description,price,image_url,is_available")
@@ -1270,7 +1583,8 @@ async function loadProducts(){
   box.appendChild(card);
  });
 }
-/* LỊCH SỬ VÒNG QUAY */
+
+/* LICH SU VONG QUAY */
 async function loadWheelHistory(){
  const box=document.getElementById("wheelHistory");
 
@@ -1309,7 +1623,7 @@ async function loadWheelHistory(){
  });
 }
 
-/* KHỞI ĐỘNG WEBSITE */
+/* KHOI DONG WEBSITE */
 (async function init(){
  await loadProducts();
  await loadAnnouncements();
@@ -1344,7 +1658,7 @@ async function loadWheelHistory(){
  }
 })();
 
-/* VÒNG QUAY MAY MẮN */
+/* VONG QUAY MAY MAN */
 (function(){
  const canvas=document.getElementById("wheelCanvas");
  if(!canvas)return;
@@ -1500,7 +1814,7 @@ async function loadWheelHistory(){
  document.head.appendChild(style);
 })();
 
-/* NHẠC NỀN YOUTUBE - VIDEO J97 BẠN ĐÃ CHỌN */
+/* NHAC NEN YOUTUBE - VIDEO J97 BAN DA CHON */
 const MUSIC_VIDEO_ID="LUAiN16V2ag";
 
 let musicPlayer=null;
@@ -1572,6 +1886,7 @@ youtubeScript.onerror=function(){
 };
 document.head.appendChild(youtubeScript);
 </script>
+
 <!-- HIỆU ỨNG TUYẾT RƠI SHOP LIÊN QUÂN -->
 <style>
 #snow-effect {
